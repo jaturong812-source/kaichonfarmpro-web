@@ -12,6 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- เพิ่ม Firebase Storage SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
@@ -872,6 +874,8 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        // เรียกใช้งาน Storage
+        const storage = firebase.storage();
 
         // --- Global Variables ---
         let currentBatchId = null;
@@ -1388,7 +1392,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             vaccineCalendar.init();
-            initCloud(); // Initialize Cloud instead of loadData()
+            initCloud(); // Initialize Cloud
             
             const today = new Date();
             document.getElementById('currentDate').textContent = today.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1775,6 +1779,7 @@
             iconContainer.className = `aspect-square bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:ring-2 ring-emerald-500 transition-all overflow-hidden border border-slate-200 ${chick.status === 'dead' ? 'opacity-50 grayscale' : ''}`;
             
             if (chick.photos && chick.photos.length > 0) {
+                // Fetch image from URL instead of Base64
                 iconContainer.innerHTML = `<img src="${chick.photos[0].data}" class="w-full h-full object-cover">`;
             } else {
                 iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">${chick.status === 'sold' ? '💰' : (chick.status === 'dead' ? '💀' : '🐣')}</span>`;
@@ -1951,10 +1956,20 @@
         window.editBreeder = function(btn) { const id = btn.closest('[data-id]').dataset.id; const b = breedersDataStore.find(x => x.id === id); if(!b) return; document.getElementById('editBreederId').value = id; document.getElementById('editBreederName').value = b.name; document.getElementById('editBreederCode').value = b.code; document.getElementById('editBreederBreed').value = b.breed; document.getElementById('editBreederSource').value = b.source; document.getElementById('editBreederStatus').value = b.status || 'alive'; document.getElementById('editBreederSalePrice').value = b.salePrice || ''; document.getElementById('editBreederSaleDate').value = b.saleDate || new Date().toISOString().split('T')[0]; document.getElementById('editBreederDeathDate').value = b.deathDate || new Date().toISOString().split('T')[0]; toggleBreederStatusFields(); showEditBreederModal(); };
         window.openBreederPhotoModal = function(id) { document.getElementById('currentBreederIdForPhotos').value = id; document.getElementById('breederPhotoModal').classList.remove('hidden'); updateBreederPhotoGallery(id); };
         
+        // --- 🗑️ ระบบลบไก่พร้อมลบรูปภาพใน Storage อัตโนมัติ ---
         window.deleteBreeder = function(id) { 
-            showConfirmation('ยืนยัน', 'ลบไก่พันธุ์และรายการบัญชีที่เกี่ยวข้อง?', () => { 
+            showConfirmation('ยืนยัน', 'ลบไก่พันธุ์ รูปภาพ และรายการบัญชีที่เกี่ยวข้อง?', async () => { 
                 const b = breedersDataStore.find(b => b.id === id); 
                 if (b) { 
+                    // ตามลบรูปภาพที่ฝากไว้ใน Storage ก่อน
+                    if (b.photos && b.photos.length > 0) {
+                        for (const p of b.photos) {
+                            if (p.path) {
+                                await storage.ref(p.path).delete().catch(e => console.log('ลบรูปภาพในระบบคลาวด์ไม่ได้: ', e));
+                            }
+                        }
+                    }
+
                     if (b.purchaseTransactionId) deleteFromCloud('finance', b.purchaseTransactionId); 
                     if (b.saleTransactionId) deleteFromCloud('finance', b.saleTransactionId); 
                     deleteFromCloud('breeders', id);
@@ -1964,8 +1979,22 @@
         };
         
         window.deleteBatch = function(id) { 
-            showConfirmation('ยืนยัน', 'ลบคอกนี้?', () => { 
+            showConfirmation('ยืนยัน', 'ลบคอกนี้พร้อมรูปภาพทั้งหมด?', async () => { 
+                const b = batchesDataStore[id];
+                if (b && b.chicks) {
+                    // ตามลบรูปลูกไก่ทุกตัวในคอกนี้จาก Storage
+                    for (const chick of b.chicks) {
+                        if (chick.photos && chick.photos.length > 0) {
+                            for (const p of chick.photos) {
+                                if (p.path) {
+                                    await storage.ref(p.path).delete().catch(e => console.log('ลบรูปลูกไก่ไม่ได้:', e));
+                                }
+                            }
+                        }
+                    }
+                }
                 deleteFromCloud('batches', id);
+                showNotification('ลบคอกลูกไก่สำเร็จ', 'success');
             }); 
         };
         
@@ -1975,13 +2004,24 @@
         
         window.deleteChick = function() { 
             const id = document.getElementById('updateChickId').value; 
-            showConfirmation('ยืนยัน', 'ลบไก่ตัวนี้?', () => { 
+            showConfirmation('ยืนยัน', 'ลบไก่ตัวนี้และรูปภาพทิ้ง?', async () => { 
                 const b = batchesDataStore[currentBatchId]; 
                 const i = b.chicks.findIndex(c => c.id == id); 
                 if (i > -1) { 
+                    const chick = b.chicks[i];
+                    // ลบรูปภาพใน Storage ก่อน
+                    if (chick.photos && chick.photos.length > 0) {
+                        for (const p of chick.photos) {
+                            if (p.path) {
+                                await storage.ref(p.path).delete().catch(e => console.log('ลบรูปภาพไม่ได้: ', e));
+                            }
+                        }
+                    }
+
                     b.chicks.splice(i, 1); b.totalChicks--; 
                     saveToCloud('batches', currentBatchId, b);
                     closeChickUpdateModal(); 
+                    showNotification('ลบไก่เรียบร้อย', 'success');
                 } 
             }); 
         };
@@ -2016,56 +2056,116 @@
             }); 
         };
         
-        window.handlePhotoUpload = function(e) { 
+        // --- ⬆️ ระบบอัปโหลดรูปขึ้น CLOUD STORAGE สำหรับลูกไก่ ---
+        window.handlePhotoUpload = async function(e) { 
             const fs = Array.from(e.target.files); 
             const id = document.getElementById('updateChickId').value; 
             const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == id); 
             if(!c) return; 
             c.photos = c.photos || []; 
-            if (fs.length > 5 - c.photos.length) return showNotification(`เพิ่มได้อีก ${5 - c.photos.length} รูป`); 
+            if (fs.length > 5 - c.photos.length) return showNotification(`เพิ่มได้อีก ${5 - c.photos.length} รูป`, 'warning'); 
             
+            showNotification('กำลังอัปโหลดรูปลูกไก่...', 'success');
             let processed = 0;
+
             fs.forEach(f => { 
-                compressImage(f, 800, 800, 0.8, (compressedDataUrl) => {
-                    c.photos.push({ id: Date.now() + Math.random(), name: f.name, data: compressedDataUrl }); 
-                    processed++;
-                    if (processed === fs.length) {
-                        saveToCloud('batches', currentBatchId, batchesDataStore[currentBatchId]);
+                compressImage(f, 800, 800, 0.8, async (compressedDataUrl) => {
+                    const uniquePhotoId = Date.now() + Math.random().toString(36).substring(7);
+                    const storagePath = `users/${currentUser.uid}/batches/${currentBatchId}/chicks/${id}/${uniquePhotoId}`;
+                    const storageRef = storage.ref(storagePath);
+                    
+                    try {
+                        await storageRef.putString(compressedDataUrl, 'data_url');
+                        const downloadUrl = await storageRef.getDownloadURL();
+                        
+                        // บันทึกเฉพาะลิงก์ (URL) แทน Base64 ลงใน Firestore
+                        c.photos.push({ id: uniquePhotoId, name: f.name, path: storagePath, data: downloadUrl }); 
+                        processed++;
+                        
+                        if (processed === fs.length) {
+                            saveToCloud('batches', currentBatchId, batchesDataStore[currentBatchId]);
+                            updatePhotoGallery(id);
+                            updateChickVisuals(id);
+                            showNotification('อัปโหลดรูปภาพสำเร็จ!', 'success');
+                        }
+                    } catch (error) {
+                        console.error('Error uploading file:', error);
+                        showNotification('เกิดข้อผิดพลาดในการอัปโหลด', 'error');
                     }
                 });
             }); 
             e.target.value = ''; 
         };
 
-        window.deletePhoto = function(cid, pid) { 
+        window.deletePhoto = async function(cid, pid) { 
             const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == cid); 
+            const photo = c.photos.find(p => p.id == pid);
+            
+            if (photo && photo.path) {
+                // ลบรูปที่ฝากไว้บน Storage
+                await storage.ref(photo.path).delete().catch(err => console.error("ไม่สามารถลบไฟล์ต้นฉบับได้:", err));
+            }
+            
             c.photos = c.photos.filter(p => p.id != pid); 
             saveToCloud('batches', currentBatchId, batchesDataStore[currentBatchId]);
+            updatePhotoGallery(cid);
+            updateChickVisuals(cid);
         };
         
-        window.handleBreederPhotoUpload = function(e) { 
+        // --- ⬆️ ระบบอัปโหลดรูปขึ้น CLOUD STORAGE สำหรับพ่อแม่พันธุ์ ---
+        window.handleBreederPhotoUpload = async function(e) { 
             const id = document.getElementById('currentBreederIdForPhotos').value; 
             const b = breedersDataStore.find(x => x.id === id); 
             b.photos = b.photos || []; 
             const fs = Array.from(e.target.files);
             
+            if (fs.length > 10 - b.photos.length) return showNotification(`เพิ่มได้อีก ${10 - b.photos.length} รูป`, 'warning');
+
+            showNotification('กำลังอัปโหลดรูปไก่พันธุ์...', 'success');
             let processed = 0;
+
             fs.forEach(f => { 
-                compressImage(f, 1024, 1024, 0.8, (compressedDataUrl) => {
-                    b.photos.push({ id: Date.now() + Math.random(), data: compressedDataUrl }); 
-                    processed++;
-                    if (processed === fs.length) {
-                        saveToCloud('breeders', id, b);
+                compressImage(f, 1024, 1024, 0.8, async (compressedDataUrl) => {
+                    const uniquePhotoId = Date.now() + Math.random().toString(36).substring(7);
+                    const storagePath = `users/${currentUser.uid}/breeders/${id}/${uniquePhotoId}`;
+                    const storageRef = storage.ref(storagePath);
+
+                    try {
+                        await storageRef.putString(compressedDataUrl, 'data_url');
+                        const downloadUrl = await storageRef.getDownloadURL();
+
+                        // เก็บข้อมูลลิงก์รูปลงใน Firestore
+                        b.photos.push({ id: uniquePhotoId, path: storagePath, data: downloadUrl }); 
+                        processed++;
+                        
+                        if (processed === fs.length) {
+                            saveToCloud('breeders', id, b);
+                            updateBreederPhotoGallery(id);
+                            renderBreeders();
+                            showNotification('อัปโหลดรูปภาพสำเร็จ!', 'success');
+                        }
+                    } catch (error) {
+                        console.error('Upload Error:', error);
+                        showNotification('เกิดข้อผิดพลาดในการอัปโหลด', 'error');
                     }
                 });
             }); 
             e.target.value = '';
         };
 
-        window.deleteBreederPhoto = function(bid, pid) { 
+        window.deleteBreederPhoto = async function(bid, pid) { 
             const b = breedersDataStore.find(x => x.id === bid); 
+            const photo = b.photos.find(p => p.id == pid);
+            
+            if (photo && photo.path) {
+                // ลบรูปภาพจาก Storage
+                await storage.ref(photo.path).delete().catch(err => console.error("ลบไฟล์ต้นฉบับไม่ได้:", err));
+            }
+
             b.photos = b.photos.filter(p => p.id != pid); 
             saveToCloud('breeders', bid, b);
+            updateBreederPhotoGallery(bid);
+            renderBreeders();
         };
 
         window.renderDashboard = function() {
