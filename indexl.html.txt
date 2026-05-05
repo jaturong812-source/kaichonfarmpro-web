@@ -12,6 +12,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+    <!-- Firebase SDK (Compat versions for Vanilla JS) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
         
@@ -79,6 +84,13 @@
                 <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-emerald-600 font-medium hover:text-emerald-700 transition">ไม่มีบัญชี? สมัครสมาชิกใหม่ฟรี</button>
             </div>
         </div>
+    </div>
+
+    <!-- Sync Overlay (โหลดข้อมูลจาก Cloud ป้องกันการเซฟทับ) -->
+    <div id="syncOverlay" class="fixed inset-0 bg-white/95 z-[10001] hidden flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mb-6 shadow-lg"></div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">กำลังซิงค์ข้อมูล...</h2>
+        <p class="text-slate-500 font-medium text-center px-4">กรุณารอสักครู่ ระบบกำลังดึงข้อมูลฟาร์มของคุณจาก Cloud</p>
     </div>
 
     <!-- Mobile Sidebar Backdrop -->
@@ -943,8 +955,25 @@
         let currentGenderFilter = 'all';
 
         // --- Firebase Config & Auth ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDG09PSCkoj7yRW4X6_TXxKBwoQQAHtIYs",
+          authDomain: "kaichonfarmpro.firebaseapp.com",
+          projectId: "kaichonfarmpro",
+          storageBucket: "kaichonfarmpro.firebasestorage.app",
+          messagingSenderId: "876107941959",
+          appId: "1:876107941959:web:6b8b1627f8e2b7ef134962",
+          measurementId: "G-9ZB3BK1Y64"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         let isLoginMode = true;
         let currentUser = null;
+        let isCloudDataLoaded = false; // สำคัญมาก: ป้องกันการเซฟทับข้อมูลคลาวด์ตอนโหลดเริ่มต้น
         
         // --- CROPPER VARIABLES ---
         let imageCropQueue = [];
@@ -1395,7 +1424,11 @@
             vaccineCalendar.init();
             
             const today = new Date();
-            document.getElementById('currentDate').textContent = today.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                dateEl.textContent = today.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            
             if (document.getElementById('chickBirthDate')) document.getElementById('chickBirthDate').valueAsDate = today;
             if (document.getElementById('transactionDate')) document.getElementById('transactionDate').valueAsDate = today;
 
@@ -1463,9 +1496,15 @@
                 currentUser = user;
                 authOverlay.classList.add('hidden');
                 document.getElementById('userIdDisplay').textContent = user.email;
+                
+                // เปิดหน้าจอซิงค์ข้อมูล
+                document.getElementById('syncOverlay').classList.remove('hidden');
+                document.getElementById('syncOverlay').classList.add('flex');
+                
                 loadDataFromCloud();
             } else {
                 currentUser = null;
+                isCloudDataLoaded = false;
                 authOverlay.classList.remove('hidden');
                 document.getElementById('authSubmitBtn').disabled = false;
                 document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'เข้าสู่ระบบ' : 'สมัครสมาชิกใหม่';
@@ -1555,19 +1594,32 @@
                     batchesDataStore = data.batches || {}; 
                     breedersDataStore = data.breeders || []; 
                     financeDataStore = data.finance || [];
+                    
+                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    
+                    // อัปเดตข้อมูลลง Local Storage ด้วย เพื่อให้เครื่องนี้มีข้อมูลล่าสุด
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+                    
                     renderAll();
+                    document.getElementById('syncOverlay').classList.add('hidden');
+                    document.getElementById('syncOverlay').classList.remove('flex');
                 } else {
                     // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
                     migrateLocalData();
                 }
             }, err => {
                 console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
                 showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
             });
         }
 
         function migrateLocalData() {
             const str = localStorage.getItem('farmData');
+            
+            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            
             if (str) {
                 try {
                     const data = JSON.parse(str);
@@ -1576,13 +1628,18 @@
                         breedersDataStore = data.breeders || []; 
                         financeDataStore = data.finance || [];
                         saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
-                        showNotification("สำรองข้อมูลเดิมขึ้น Cloud ให้เรียบร้อย!", "success");
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
                     }
                 } catch (e) { 
                     console.error(e);
                 }
+            } else {
+                saveData(); // Save empty document to cloud
             }
+            
             renderAll();
+            document.getElementById('syncOverlay').classList.add('hidden');
+            document.getElementById('syncOverlay').classList.remove('flex');
         }
 
         function renderAll() {
@@ -1612,6 +1669,11 @@
 
         // --- Save Data Function (Cloud Sync) ---
         function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
+            localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+            
             if (!currentUser) return;
             
             const dataToSave = { 
@@ -2192,45 +2254,88 @@
 
         // --- Save and Load Functions (Local Storage Only) ---
         function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
             localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
-            const saveStatusEl = document.getElementById('saveStatus');
-            if (saveStatusEl) {
-                saveStatusEl.classList.remove('opacity-0');
-                clearTimeout(saveStatusTimeout);
-                saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
-            }
+            
+            if (!currentUser) return;
+            
+            const dataToSave = { 
+                batches: batchesDataStore, 
+                breeders: breedersDataStore, 
+                finance: financeDataStore,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true })
+                .then(() => {
+                    const saveStatusEl = document.getElementById('saveStatus');
+                    if (saveStatusEl) {
+                        saveStatusEl.classList.remove('opacity-0');
+                        clearTimeout(saveStatusTimeout);
+                        saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
+                    }
+                }).catch(err => {
+                    console.error("Save Error:", err);
+                    showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
+                });
         }
         
-        function loadData() {
+        function loadDataFromCloud() {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    batchesDataStore = data.batches || {}; 
+                    breedersDataStore = data.breeders || []; 
+                    financeDataStore = data.finance || [];
+                    
+                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    
+                    // บันทึกลงเครื่องเพื่อเป็น Backup ออฟไลน์
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+                    
+                    renderAll();
+                    document.getElementById('syncOverlay').classList.add('hidden');
+                    document.getElementById('syncOverlay').classList.remove('flex');
+                } else {
+                    // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
+                    migrateLocalData();
+                }
+            }, err => {
+                console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
+                showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
+            });
+        }
+
+        function migrateLocalData() {
             const str = localStorage.getItem('farmData');
+            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            
             if (str) {
                 try {
                     const data = JSON.parse(str);
-                    if(data) {
+                    if(data && (data.batches || data.breeders || data.finance)) {
                         batchesDataStore = data.batches || {}; 
                         breedersDataStore = data.breeders || []; 
                         financeDataStore = data.finance || [];
+                        saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
                     }
                 } catch (e) { 
-                    showNotification("เกิดข้อผิดพลาดในการโหลดข้อมูลเดิม", "error"); 
+                    console.error(e);
                 }
+            } else {
+                saveData(); // Save empty state to cloud to initialize document
             }
-
-            // Fallback & Initialize structures
-            breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
-            Object.values(batchesDataStore).forEach(b => {
-                if (!b.vaccinations) b.vaccinations = vaccineCalendar.generateVaccinationSchedule(b.birthDate);
-                if (b.chicks) b.chicks.forEach(c => { if (!c.photos) c.photos = []; });
-            });
             
-            const grid = document.getElementById('chickBatchesGrid'); grid.innerHTML = '';
-            Object.values(batchesDataStore).forEach(b => grid.appendChild(createBatchCard(b)));
-            
-            renderBreeders(); 
-            filterFinance(currentFinancePeriod); 
-            updateGlobalStatistics(); 
-            vaccineCalendar.renderCoopList(); 
-            renderDashboard();
+            renderAll();
+            document.getElementById('syncOverlay').classList.add('hidden');
+            document.getElementById('syncOverlay').classList.remove('flex');
         }
 
         function renderFinanceChart(data, period) {
