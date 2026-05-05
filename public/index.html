@@ -12,6 +12,11 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+    <!-- Firebase SDK (Compat versions for Vanilla JS) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
         
@@ -943,6 +948,22 @@
         let currentGenderFilter = 'all';
 
         // --- Firebase Config & Auth ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDG09PSCkoj7yRW4X6_TXxKBwoQQAHtIYs",
+          authDomain: "kaichonfarmpro.firebaseapp.com",
+          projectId: "kaichonfarmpro",
+          storageBucket: "kaichonfarmpro.firebasestorage.app",
+          messagingSenderId: "876107941959",
+          appId: "1:876107941959:web:6b8b1627f8e2b7ef134962",
+          measurementId: "G-9ZB3BK1Y64"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         let isLoginMode = true;
         let currentUser = null;
         
@@ -1393,9 +1414,14 @@
         // --- Core Application Initialization ---
         document.addEventListener('DOMContentLoaded', function() {
             vaccineCalendar.init();
+            loadData(); // Load purely from LocalStorage now
             
             const today = new Date();
-            document.getElementById('currentDate').textContent = today.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            const dateEl = document.getElementById('currentDate');
+            if (dateEl) {
+                dateEl.textContent = today.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            
             if (document.getElementById('chickBirthDate')) document.getElementById('chickBirthDate').valueAsDate = today;
             if (document.getElementById('transactionDate')) document.getElementById('transactionDate').valueAsDate = today;
 
@@ -1612,6 +1638,9 @@
 
         // --- Save Data Function (Cloud Sync) ---
         function saveData() {
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
+            localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+            
             if (!currentUser) return;
             
             const dataToSave = { 
@@ -2192,13 +2221,30 @@
 
         // --- Save and Load Functions (Local Storage Only) ---
         function saveData() {
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
             localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
-            const saveStatusEl = document.getElementById('saveStatus');
-            if (saveStatusEl) {
-                saveStatusEl.classList.remove('opacity-0');
-                clearTimeout(saveStatusTimeout);
-                saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
-            }
+            
+            if (!currentUser) return;
+            
+            const dataToSave = { 
+                batches: batchesDataStore, 
+                breeders: breedersDataStore, 
+                finance: financeDataStore,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true })
+                .then(() => {
+                    const saveStatusEl = document.getElementById('saveStatus');
+                    if (saveStatusEl) {
+                        saveStatusEl.classList.remove('opacity-0');
+                        clearTimeout(saveStatusTimeout);
+                        saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
+                    }
+                }).catch(err => {
+                    console.error("Save Error:", err);
+                    showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
+                });
         }
         
         function loadData() {
