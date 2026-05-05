@@ -55,6 +55,7 @@
         .vaccination-day { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; font-weight: 500; }
         .completed-day { background-color: #f1f5f9; color: #64748b; text-decoration: line-through; border-color: #e2e8f0; }
         .overdue-day { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; font-weight: 500; }
+        .skipped-day { background-color: #f8fafc; color: #94a3b8; text-decoration: line-through; border-color: #cbd5e1; border-style: dashed; }
         
         .aspect-3-4 { padding-top: 133.33%; }
         
@@ -500,6 +501,10 @@
                             <div class="flex items-center gap-2">
                                 <div class="w-4 h-4 rounded bg-[#fef2f2] border border-[#fecaca]"></div>
                                 <span class="text-sm font-medium text-slate-600">เลยกำหนด</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded bg-[#f8fafc] border border-dashed border-[#cbd5e1]"></div>
+                                <span class="text-sm font-medium text-slate-600">ข้าม</span>
                             </div>
                         </div>
                     </div>
@@ -1276,6 +1281,7 @@
 
                     if (vaccination) {
                         if (vaccination.status === 'completed') dayClass += ' completed-day';
+                        else if (vaccination.status === 'skipped') dayClass += ' skipped-day';
                         else if (date < today) dayClass += ' overdue-day';
                         else dayClass += ' vaccination-day';
                     } else if (isCurrentMonth && !isToday) {
@@ -1344,6 +1350,7 @@
                             <div class="flex gap-2">
                                 <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'completed')" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">ฉีดแล้ว</button>
                                 <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'pending')" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">รอฉีด</button>
+                                <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'skipped')" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">ข้าม</button>
                             </div>
                         </div>
                     `;
@@ -1357,20 +1364,37 @@
                 const modal = document.getElementById('vaccinationModal');
                 const details = document.getElementById('vaccinationDetails');
                 
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const vacDate = new Date(vaccination.date);
+                
+                let statusBadge = '';
+                if (vaccination.status === 'completed') statusBadge = '<span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">ฉีดแล้ว</span>';
+                else if (vaccination.status === 'skipped') statusBadge = '<span class="px-3 py-1 bg-slate-200 text-slate-600 rounded-full text-xs font-bold">ข้าม</span>';
+                else if (vacDate < today) statusBadge = '<span class="px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold">เลยกำหนด</span>';
+                else statusBadge = '<span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">รอฉีด</span>';
+
                 details.innerHTML = `
-                    <div class="mb-6">
-                        <h4 class="text-xl font-bold text-slate-800 mb-2">${vaccination.name}</h4>
-                        <p class="text-sm text-emerald-600 font-medium">กำหนดฉีด: ${new Date(vaccination.date).toLocaleDateString('th-TH')}</p>
+                    <div class="flex justify-between items-start mb-6">
+                        <h4 class="text-xl font-bold text-slate-800">${vaccination.name}</h4>
+                        ${statusBadge}
                     </div>
-                    <div class="bg-slate-50 rounded-xl p-4 space-y-3 text-sm text-slate-700 mb-6 border border-slate-100">
-                        <p><strong class="text-slate-900">วัตถุประสงค์:</strong> ${vaccination.purpose}</p>
-                        <p><strong class="text-slate-900">ช่วงอายุไก่:</strong> ${vaccination.ageRange} (อายุจริง ${vaccination.daysFromBirth} วัน)</p>
-                        <p><strong class="text-slate-900">วิธีการให้:</strong> ${vaccination.method}</p>
-                        ${vaccination.note ? `<p><strong class="text-slate-900">หมายเหตุ:</strong> ${vaccination.note}</p>` : ''}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm text-slate-700 border border-slate-100 rounded-xl p-4 bg-slate-50">
+                        <div class="space-y-3">
+                            <p><strong class="text-slate-900">วันที่ฉีด:</strong> ${new Date(vaccination.date).toLocaleDateString('th-TH')}</p>
+                            <p><strong class="text-slate-900">อายุไก่:</strong> ${vaccination.daysFromBirth} วัน</p>
+                            <p><strong class="text-slate-900">ช่วงอายุ:</strong> ${vaccination.ageRange}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <p><strong class="text-slate-900">วัตถุประสงค์:</strong> ${vaccination.purpose}</p>
+                            <p><strong class="text-slate-900">หมายเหตุ:</strong> ${vaccination.note || '-'}</p>
+                            <p><strong class="text-slate-900">วิธีการฉีด:</strong> ${vaccination.method}</p>
+                        </div>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'completed'); vaccineCalendar.hideVaccinationModal();" class="flex-1 bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-medium hover:bg-emerald-700 transition">✓ บันทึกว่าฉีดแล้ว</button>
-                        <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'pending'); vaccineCalendar.hideVaccinationModal();" class="bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-medium hover:bg-slate-50 transition">รีเซ็ต</button>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'completed'); vaccineCalendar.hideVaccinationModal();" class="flex-1 min-w-[100px] bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium transition shadow-sm flex items-center justify-center gap-2">✓ ฉีดแล้ว</button>
+                        <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'pending'); vaccineCalendar.hideVaccinationModal();" class="flex-1 min-w-[100px] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition shadow-sm flex items-center justify-center gap-2">↻ รอฉีด</button>
+                        <button onclick="vaccineCalendar.updateVaccinationStatus('${vaccination.id}', 'skipped'); vaccineCalendar.hideVaccinationModal();" class="flex-1 min-w-[100px] bg-slate-600 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-medium transition shadow-sm flex items-center justify-center gap-2">⊘ ข้าม</button>
                     </div>
                 `;
                 modal.classList.remove('hidden');
@@ -1653,6 +1677,29 @@
             document.getElementById('syncOverlay').classList.remove('flex');
         }
 
+        function renderBatches() {
+            const grid = document.getElementById('chickBatchesGrid'); 
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            const batchesArray = Object.values(batchesDataStore);
+            batchesArray.sort((a, b) => {
+                const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
+                const bAlive = b.chicks ? b.chicks.filter(c => c.status === 'alive').length : 0;
+                const aActive = aAlive > 0;
+                const bActive = bAlive > 0;
+                
+                // แยกกลุ่ม: คอกที่มีไก่อยู่ (Active) ไว้บนสุด, คอกที่ไม่มีไก่ (Inactive) ไว้ล่างสุด
+                if (aActive && !bActive) return -1;
+                if (!aActive && bActive) return 1;
+                
+                // เรียงตามอายุ (อายุมากสุดขึ้นก่อน -> วันเกิดน้อยกว่าขึ้นก่อน)
+                return new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime();
+            });
+            
+            batchesArray.forEach(b => grid.appendChild(createBatchCard(b)));
+        }
+
         function renderAll() {
             // เช็คและซ่อมแซมโครงสร้างข้อมูลให้สมบูรณ์
             breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
@@ -1661,11 +1708,7 @@
                 if (b.chicks) b.chicks.forEach(c => { if (!c.photos) c.photos = []; });
             });
             
-            const grid = document.getElementById('chickBatchesGrid'); 
-            if (grid) {
-                grid.innerHTML = '';
-                Object.values(batchesDataStore).forEach(b => grid.appendChild(createBatchCard(b)));
-            }
+            renderBatches();
             
             renderBreeders(); 
             filterFinance(currentFinancePeriod); 
@@ -1678,28 +1721,21 @@
             }
         }
 
-        // --- ปรับปรุงฟังก์ชัน saveData เพื่อรองรับการซิงค์ข้อมูลอย่างเสถียร ---
+        // --- Save Data Function (Cloud Sync) ---
         function saveData() {
             if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
             
             // รวบรวมข้อมูลทั้งหมด
             const farmDataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
-            const payloadString = JSON.stringify(farmDataObj);
             
             // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
-            localStorage.setItem('farmData', payloadString);
+            localStorage.setItem('farmData', JSON.stringify(farmDataObj));
             
             if (!currentUser) return;
-
-            // ตรวจสอบขนาดข้อมูล (Firestore จำกัด document ที่ 1MB)
-            const dataSizeInBytes = new Blob([payloadString]).size;
-            if (dataSizeInBytes > 1000000) { // ประมาณ 0.95MB เพื่อความปลอดภัย
-                showNotification('ข้อมูลใหญ่เกินขีดจำกัด (1MB) ไม่สามารถซิงค์ขึ้น Cloud ได้ กรุณาลบรูปภาพที่ไม่จำเป็นออก', 'warning');
-                return;
-            }
             
+            // ทำความสะอาดและเข้ารหัสข้อมูลเป็น String เพื่อป้องกัน Error: Property array contains an invalid nested entity
             const dataToSave = { 
-                payload: payloadString,
+                payload: JSON.stringify(farmDataObj),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
@@ -1712,12 +1748,8 @@
                         saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
                     }
                 }).catch(err => {
-                    console.error("Cloud Sync Error:", err);
-                    let errorMsg = 'ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ';
-                    if (err.code === 'permission-denied') errorMsg = 'ไม่มีสิทธิ์บันทึกข้อมูล (Permission Denied)';
-                    else if (err.code === 'resource-exhausted') errorMsg = 'โควต้า Firestore เต็มแล้ว';
-                    
-                    showNotification(errorMsg, 'error');
+                    console.error("Save Error:", err);
+                    showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
                 });
         }
 
@@ -1813,7 +1845,7 @@
                         vaccinations: vaccineCalendar.generateVaccinationSchedule(birthDate)
                     };
                     batchesDataStore[newBatchId] = newBatchData;
-                    document.getElementById('chickBatchesGrid').appendChild(createBatchCard(newBatchData));
+                    renderBatches();
                     updateGlobalStatistics(); saveData(); vaccineCalendar.renderCoopList();
                     showNotification(`บันทึกคอกใหม่สำเร็จ!`, 'success'); closeAddChickBatchModal();
                     this.reset();
@@ -1853,7 +1885,7 @@
                             for(let i = 0; i < newChicksCount; i++) batch.chicks.push({ id: existingChicks + i + 1, code: '', status: 'alive', gender: 'unknown', photos: [] });
                             batch.totalChicks += newChicksCount;
                         }
-                        renderBatchDetails(currentBatchId); renderChickGallery(currentBatchId); renderBatchCard(currentBatchId);
+                        renderBatchDetails(currentBatchId); renderChickGallery(currentBatchId); renderBatches();
                         saveData(); showNotification('แก้ไขข้อมูลคอกสำเร็จ!', 'success'); closeEditBatchModal();
                     }
                 });
@@ -2000,10 +2032,23 @@
 
         function createBatchCard(data) {
             const card = document.createElement('div');
-            card.className = 'bg-white rounded-2xl p-6 card-shadow card-hover relative';
             card.dataset.batchId = data.id;
 
+            const aliveCount = data.chicks ? data.chicks.filter(c => c.status === 'alive').length : 0;
+            const soldCount = data.chicks ? data.chicks.filter(c => c.status === 'sold').length : 0;
+            const deadCount = data.chicks ? data.chicks.filter(c => c.status === 'dead').length : 0;
+            const isInactive = aliveCount === 0;
+
             const ageInDays = Math.floor((new Date() - new Date(data.birthDate)) / (1000 * 60 * 60 * 24));
+
+            // ปรับสีพื้นปกตามสถานะ
+            card.className = isInactive 
+                ? 'bg-slate-50 rounded-2xl p-6 relative border-2 border-slate-200 opacity-75 grayscale-[20%]' 
+                : 'bg-white rounded-2xl p-6 card-shadow card-hover relative border-t-4 border-emerald-500';
+
+            const headerBadge = isInactive
+                ? `<span class="bg-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-lg text-sm border border-slate-300">คอกปิด / ไม่มีไก่</span>`
+                : `<span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg text-sm border border-emerald-200">อายุ ${ageInDays} วัน</span>`;
 
             card.innerHTML = `
                 <button onclick="deleteBatch('${data.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 transition">
@@ -2011,37 +2056,37 @@
                 </button>
                 <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                     <div>
-                        <h3 class="font-bold text-xl text-slate-800 mb-1">${data.name}</h3>
+                        <h3 class="font-bold text-xl ${isInactive ? 'text-slate-600' : 'text-slate-800'} mb-1">${data.name}</h3>
                         <p class="text-slate-500 text-sm font-medium flex items-center gap-1"><i class="ph ph-calendar-blank"></i> ${new Date(data.birthDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                     </div>
-                    <span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg text-sm border border-emerald-200">อายุ ${ageInDays} วัน</span>
+                    ${headerBadge}
                 </div>
                 <div class="mb-6">
                     <p class="text-sm font-medium text-slate-500 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">${data.parents}</p>
-                    <div class="flex justify-between text-sm bg-blue-50 p-3 rounded-xl border border-blue-100">
-                        <span class="text-blue-800 font-medium">เริ่ม: <span class="font-bold text-lg">${data.totalChicks}</span></span>
-                        <span class="text-emerald-700 font-medium">คงเหลือ: <span class="batch-alive font-bold text-lg">${data.chicks.filter(c => c.status === 'alive').length}</span></span>
+                    <div class="flex justify-between text-sm ${isInactive ? 'bg-slate-200 border-slate-300' : 'bg-blue-50 border-blue-100'} p-3 rounded-xl border">
+                        <span class="${isInactive ? 'text-slate-600' : 'text-blue-800'} font-medium">เริ่ม: <span class="font-bold text-lg">${data.totalChicks}</span></span>
+                        <span class="${isInactive ? 'text-slate-600' : 'text-emerald-700'} font-medium">คงเหลือ: <span class="batch-alive font-bold text-lg">${aliveCount}</span></span>
                     </div>
                 </div>
                 <div class="grid grid-cols-4 gap-3 mb-6">
-                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-center p-3 ${isInactive ? 'bg-slate-200 border-slate-300' : 'bg-slate-50 border-slate-100'} rounded-xl border">
                         <p class="text-xs text-slate-500 font-medium mb-1">อยู่</p>
-                        <p class="font-bold text-blue-600 text-lg batch-raising">${data.chicks.filter(c => c.status === 'alive').length}</p>
+                        <p class="font-bold ${isInactive ? 'text-slate-600' : 'text-blue-600'} text-lg batch-raising">${aliveCount}</p>
                     </div>
-                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-center p-3 ${isInactive ? 'bg-slate-200 border-slate-300' : 'bg-slate-50 border-slate-100'} rounded-xl border">
                         <p class="text-xs text-slate-500 font-medium mb-1">ขาย</p>
-                        <p class="font-bold text-emerald-600 text-lg batch-sold">${data.chicks.filter(c => c.status === 'sold').length}</p>
+                        <p class="font-bold ${isInactive ? 'text-slate-600' : 'text-emerald-600'} text-lg batch-sold">${soldCount}</p>
                     </div>
-                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="text-center p-3 ${isInactive ? 'bg-slate-200 border-slate-300' : 'bg-slate-50 border-slate-100'} rounded-xl border">
                         <p class="text-xs text-slate-500 font-medium mb-1">ตาย</p>
-                        <p class="font-bold text-rose-600 text-lg batch-dead">${data.chicks.filter(c => c.status === 'dead').length}</p>
+                        <p class="font-bold ${isInactive ? 'text-slate-600' : 'text-rose-600'} text-lg batch-dead">${deadCount}</p>
                     </div>
-                    <div class="text-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                        <p class="text-xs text-emerald-600 font-medium mb-1">รายได้</p>
-                        <p class="font-bold text-emerald-700 batch-revenue text-sm">฿0</p>
+                    <div class="text-center p-3 ${isInactive ? 'bg-emerald-50 border-emerald-100 grayscale' : 'bg-emerald-50 border-emerald-100'} rounded-xl border">
+                        <p class="text-xs ${isInactive ? 'text-slate-600' : 'text-emerald-600'} font-medium mb-1">รายได้</p>
+                        <p class="font-bold ${isInactive ? 'text-slate-600' : 'text-emerald-700'} batch-revenue text-sm">฿0</p>
                     </div>
                 </div>
-                <button onclick="openBatchDetails('${data.id}')" class="w-full bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-medium py-3 rounded-xl transition flex items-center justify-center gap-2">
+                <button onclick="openBatchDetails('${data.id}')" class="w-full ${isInactive ? 'bg-slate-200 hover:bg-slate-300 text-slate-600' : 'bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700'} font-medium py-3 rounded-xl transition flex items-center justify-center gap-2">
                     จัดการรายตัว <i class="ph ph-arrow-right"></i>
                 </button>
             `;
@@ -2151,7 +2196,10 @@
         function closeAddChickBatchModal() { document.getElementById('addChickBatchModal').classList.add('hidden'); }
         function closeEditBatchModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
         function closeBreederPhotoModal() { document.getElementById('breederPhotoModal').classList.add('hidden'); }
-        function goBackToChicks() { showSection('chicks', document.querySelector('button[onclick*="chicks"]')); }
+        function goBackToChicks() { 
+            renderBatches();
+            showSection('chicks', document.querySelector('button[onclick*="chicks"]')); 
+        }
 
         function toggleBreederStatusFields() {
             const status = document.getElementById('editBreederStatus').value;
@@ -2214,14 +2262,6 @@
             document.getElementById('addChickCount').value = '';
             document.getElementById('editBatchNote').value = batch.note || ''; 
             document.getElementById('editBatchModal').classList.remove('hidden'); 
-        }
-
-        function renderBatchCard(batchId) {
-            const oldCard = document.querySelector(`[data-batch-id="${batchId}"]`);
-            if (oldCard) {
-                const newCard = createBatchCard(batchesDataStore[batchId]);
-                oldCard.replaceWith(newCard);
-            }
         }
 
         function updateBatchStatistics(id) { 
@@ -2318,7 +2358,6 @@
             showNotification('ดาวน์โหลดไฟล์สำเร็จ');
         }
 
-        // --- ปรับปรุงฟังก์ชัน restoreData ให้ปลอดภัยขึ้น ---
         function restoreData() {
             const f = document.getElementById('restoreFile').files[0];
             if (!f) return showNotification('กรุณาเลือกไฟล์', 'warning');
@@ -2326,29 +2365,26 @@
             r.onload = e => {
                 try {
                     const d = JSON.parse(e.target.result);
-                    // เช็คโครงสร้างข้อมูลเบื้องต้น
+                    // เช็คว่าไฟล์มีโครงสร้างข้อมูลของแอป
                     if (d.batches || d.breeders || d.finance) {
-                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบและบน Cloud จะถูกเขียนทับด้วยข้อมูลจากไฟล์นี้', () => {
+                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบและบน Cloud จะถูกเขียนทับ', () => {
                             batchesDataStore = d.batches || {};
                             breedersDataStore = Array.isArray(d.breeders) ? d.breeders : Object.values(d.breeders || {});
                             financeDataStore = Array.isArray(d.finance) ? d.finance : Object.values(d.finance || {});
                             
-                            isCloudDataLoaded = true; // ปลดล็อกเพื่อให้ saveData ทำงานได้
+                            isCloudDataLoaded = true; // ปลดล็อกป้องกันการเซฟ
+                            saveData(); // บันทึกลงเครื่อง และอัปโหลดขึ้น Cloud
                             
-                            // ล้างหน้าจอแล้ววาดใหม่ทันที
-                            renderAll();
+                            renderAll(); // ⭐️ บังคับให้หน้าจอดึงข้อมูลใหม่มาแสดงทันที
+                            document.getElementById('restoreFile').value = ''; // เคลียร์ชื่อไฟล์
                             
-                            // บันทึกข้อมูลใหม่ลงเครื่องและพยายามส่งขึ้น Cloud
-                            saveData(); 
-                            
-                            document.getElementById('restoreFile').value = '';
                             showNotification('กู้คืนข้อมูลสำเร็จ!', 'success');
                         });
-                    } else throw new Error('Invalid structure');
+                    } else throw new Error();
                 }
                 catch (err) {
                     console.error("Restore Error:", err);
-                    showNotification('รูปแบบไฟล์ไม่ถูกต้อง หรือไฟล์เสียหาย', 'error');
+                    showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
                 }
             };
             r.readAsText(f);
