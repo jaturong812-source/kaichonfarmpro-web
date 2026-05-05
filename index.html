@@ -1590,14 +1590,26 @@
             
             db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
                 if (doc.exists) {
-                    const data = doc.data();
+                    const docData = doc.data();
+                    let data = {};
+                    
+                    if (docData.payload) {
+                        try {
+                            data = JSON.parse(docData.payload);
+                        } catch(e) {
+                            console.error("Parse Error:", e);
+                        }
+                    } else {
+                        data = docData; // รองรับบัญชีเก่า
+                    }
+                    
                     batchesDataStore = data.batches || {}; 
                     breedersDataStore = data.breeders || []; 
                     financeDataStore = data.finance || [];
                     
                     isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
                     
-                    // อัปเดตข้อมูลลง Local Storage ด้วย เพื่อให้เครื่องนี้มีข้อมูลล่าสุด
+                    // บันทึกลงเครื่องเพื่อเป็น Backup ออฟไลน์
                     localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
                     
                     renderAll();
@@ -1697,6 +1709,602 @@
                     showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
                 });
         }
+
+        function bindForms() {
+             const addBreederForm = document.getElementById('addBreederForm');
+            if (addBreederForm) {
+                addBreederForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const breederName = document.getElementById('breederName').value;
+                    const price = parseFloat(document.getElementById('breederPrice').value) || 0;
+                    const newBreeder = { id: `breeder-${Date.now()}`, name: breederName, code: document.getElementById('breederCode').value, gender: document.getElementById('breederGender').value, breed: document.getElementById('breederBreed').value, source: document.getElementById('breederSource').value, photos: [], status: 'alive' };
+                    if (price > 0) {
+                        const transactionId = `trans-${Date.now()}`;
+                        financeDataStore.push({ id: transactionId, type: 'expense', category: 'chicken-purchase', amount: price, note: `ซื้อไก่พันธุ์: ${breederName}`, date: new Date().toISOString().split('T')[0] });
+                        newBreeder.purchaseTransactionId = transactionId;
+                        filterFinance(currentFinancePeriod);
+                    }
+                    breedersDataStore.push(newBreeder);
+                    renderBreeders(); updateBreederSelects(); saveData(); updateGlobalStatistics();
+                    showNotification(`เพิ่มไก่พันธุ์สำเร็จ!`, 'success');
+                    closeAddBreederModal(); this.reset();
+                });
+            }
+
+            const editBreederForm = document.getElementById('editBreederForm');
+            if(editBreederForm) {
+                editBreederForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const id = document.getElementById('editBreederId').value;
+                    const breederIndex = breedersDataStore.findIndex(b => b.id === id);
+                    if (breederIndex > -1) {
+                        const originalBreeder = { ...breedersDataStore[breederIndex] };
+                        const breeder = breedersDataStore[breederIndex];
+                        const newStatus = document.getElementById('editBreederStatus').value;
+                        const originalStatus = originalBreeder.status;
+                        
+                        if (newStatus === 'sold') {
+                            const salePrice = parseFloat(document.getElementById('editBreederSalePrice').value) || 0;
+                            const saleDate = document.getElementById('editBreederSaleDate').value;
+                            if (salePrice <= 0 || !saleDate) { showNotification('กรุณากรอกราคาและวันที่ขาย', 'error'); return; }
+                            if (originalStatus === 'sold' && breeder.saleTransactionId) {
+                                const transaction = financeDataStore.find(t => t.id === breeder.saleTransactionId);
+                                if (transaction) { transaction.amount = salePrice; transaction.date = saleDate; transaction.note = `ขายไก่พันธุ์: ${breeder.name}`; }
+                            } else {
+                                const transactionId = `trans-${Date.now()}`;
+                                financeDataStore.push({ id: transactionId, type: 'income', category: 'chicken-sale', amount: salePrice, note: `ขายไก่พันธุ์: ${breeder.name}`, date: saleDate });
+                                breeder.saleTransactionId = transactionId;
+                            }
+                            breeder.salePrice = salePrice; breeder.saleDate = saleDate;
+                        }
+
+                        if (originalStatus === 'sold' && newStatus !== 'sold') {
+                             if (breeder.saleTransactionId) {
+                                const transactionIndex = financeDataStore.findIndex(t => t.id === breeder.saleTransactionId);
+                                if (transactionIndex > -1) financeDataStore.splice(transactionIndex, 1);
+                            }
+                            delete breeder.saleTransactionId; delete breeder.salePrice; delete breeder.saleDate;
+                        }
+                        
+                        if (newStatus === 'dead') {
+                             const deathDate = document.getElementById('editBreederDeathDate').value;
+                             if (!deathDate) { showNotification('กรุณากรอกวันที่ตาย', 'error'); return; }
+                             breeder.deathDate = deathDate;
+                        } else delete breeder.deathDate;
+                        
+                         breeder.name = document.getElementById('editBreederName').value;
+                         breeder.code = document.getElementById('editBreederCode').value;
+                         breeder.breed = document.getElementById('editBreederBreed').value;
+                         breeder.source = document.getElementById('editBreederSource').value;
+                         breeder.status = newStatus;
+                         
+                         renderBreeders(); updateGlobalStatistics(); filterFinance(currentFinancePeriod); saveData();
+                         showNotification(`แก้ไขข้อมูลสำเร็จ!`, 'success'); closeEditBreederModal();
+                    }
+                });
+            }
+
+            const addChickBatchForm = document.getElementById('addChickBatchForm');
+            if (addChickBatchForm) {
+                addChickBatchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const count = parseInt(document.getElementById('chickCount').value) || 0;
+                    const birthDate = document.getElementById('chickBirthDate').value;
+                    const note = document.getElementById('chickBatchNote').value;
+                    const newBatchId = `batch${Date.now()}`;
+                    const newBatchData = {
+                        id: newBatchId, name: `คอกที่ ${Object.keys(batchesDataStore).length + 1}`,
+                        parents: `${document.getElementById('fatherSelect').value} x ${document.getElementById('motherSelect').value}`,
+                        birthDate: birthDate, 
+                        totalChicks: count,
+                        note: note,
+                        chicks: Array.from({length: count}, (_, i) => ({ id: i + 1, code: '', status: 'alive', gender: 'unknown', photos: [] })),
+                        vaccinations: vaccineCalendar.generateVaccinationSchedule(birthDate)
+                    };
+                    batchesDataStore[newBatchId] = newBatchData;
+                    document.getElementById('chickBatchesGrid').appendChild(createBatchCard(newBatchData));
+                    updateGlobalStatistics(); saveData(); vaccineCalendar.renderCoopList();
+                    showNotification(`บันทึกคอกใหม่สำเร็จ!`, 'success'); closeAddChickBatchModal();
+                    this.reset();
+                });
+            }
+
+            const transactionForm = document.getElementById('transactionForm');
+            if (transactionForm) {
+                transactionForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const categorySelect = document.getElementById('transactionCategory');
+                    const newTransaction = {
+                        id: `trans-${Date.now()}`, type: document.getElementById('transactionType').value, category: categorySelect.value,
+                        amount: parseFloat(document.getElementById('transactionAmount').value),
+                        note: document.getElementById('transactionNote').value.trim() || categorySelect.options[categorySelect.selectedIndex].text,
+                        date: document.getElementById('transactionDate').value
+                    };
+                    financeDataStore.push(newTransaction);
+                    filterFinance(currentFinancePeriod); saveData();
+                    showNotification('บันทึกรายการสำเร็จ!', 'success'); this.reset();
+                    document.getElementById('transactionDate').valueAsDate = new Date(); updateTransactionCategories();
+                });
+            }
+            
+            const editBatchForm = document.getElementById('editBatchForm');
+            if(editBatchForm) {
+                editBatchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const batch = batchesDataStore[currentBatchId];
+                    if (batch) {
+                        batch.parents = `${document.getElementById('editBatchFatherSelect').value} x ${document.getElementById('editBatchMotherSelect').value}`;
+                        batch.birthDate = document.getElementById('editBatchBirthDate').value;
+                        batch.note = document.getElementById('editBatchNote').value;
+                        const newChicksCount = parseInt(document.getElementById('addChickCount').value) || 0;
+                        if (newChicksCount > 0) {
+                            const existingChicks = batch.chicks.length;
+                            for(let i = 0; i < newChicksCount; i++) batch.chicks.push({ id: existingChicks + i + 1, code: '', status: 'alive', gender: 'unknown', photos: [] });
+                            batch.totalChicks += newChicksCount;
+                        }
+                        renderBatchDetails(currentBatchId); renderChickGallery(currentBatchId); renderBatchCard(currentBatchId);
+                        saveData(); showNotification('แก้ไขข้อมูลคอกสำเร็จ!', 'success'); closeEditBatchModal();
+                    }
+                });
+            }
+             const chickUpdateForm = document.getElementById('chickUpdateForm');
+            if (chickUpdateForm) {
+                chickUpdateForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const chickId = document.getElementById('updateChickId').value;
+                    const batch = batchesDataStore[currentBatchId];
+                    const chick = batch.chicks.find(c => c.id == chickId);
+                    if (!chick) return;
+
+                    const originalStatus = chick.status;
+                    const status = document.getElementById('chickStatus').value;
+                    const code = document.getElementById('chickCode').value;
+                    const statusData = { gender: document.getElementById('chickGender').value, code: code };
+                    let notificationMessage = `อัปเดตข้อมูลสำเร็จ`;
+
+                    if (originalStatus === 'sold' && status !== 'sold') {
+                        const transactionIndex = financeDataStore.findIndex(t => t.id === chick.transactionId);
+                        if (transactionIndex > -1) financeDataStore.splice(transactionIndex, 1);
+                    }
+
+                    if (status === 'sold') {
+                        const salePrice = document.getElementById('salePrice').value;
+                        const saleDate = document.getElementById('saleDate').value;
+                        if (!salePrice || !saleDate) { showNotification('กรุณาระบุราคาและวันที่ขาย', 'error'); return; }
+                        
+                        statusData.salePrice = salePrice; statusData.saleDate = saleDate;
+                        statusData.buyerName = document.getElementById('buyerName').value;
+
+                        let transactionNote = `ขายไก่รหัส ${code || chickId} (${batch.name})`;
+                        if (originalStatus !== 'sold') {
+                            const transactionId = addTransactionFromChickSale({ price: salePrice, date: saleDate, note: transactionNote });
+                            statusData.transactionId = transactionId;
+                        } else {
+                            const transaction = financeDataStore.find(t => t.id === chick.transactionId);
+                            if (transaction) { transaction.amount = parseFloat(salePrice); transaction.date = saleDate; transaction.note = transactionNote; }
+                        }
+                    } else if (status === 'dead') {
+                        const deathDate = document.getElementById('deathDate').value;
+                        if (!deathDate) { showNotification('กรุณาระบุวันที่ตาย', 'error'); return; }
+                        statusData.deathDate = deathDate; statusData.deathCause = document.getElementById('deathCause').value;
+                    }
+                    
+                    updateChickStatus(chickId, status, statusData);
+                    filterFinance(currentFinancePeriod); updateBatchStatistics(currentBatchId); saveData();
+                    closeChickUpdateModal(); showNotification(notificationMessage, 'success');
+                });
+            }
+        }
+
+        // --- Render Functions ---
+        function renderBreeders() {
+            const grid = document.getElementById('breedersGrid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            const showAlive = document.getElementById('statusAlive')?.checked ?? true;
+            const showSold = document.getElementById('statusSold')?.checked ?? true;
+            const showDead = document.getElementById('statusDead')?.checked ?? true;
+            
+            const filteredBreeders = breedersDataStore.filter(b => {
+                const genderMatch = currentGenderFilter === 'all' || b.gender === currentGenderFilter;
+                let statusMatch = false;
+                if (b.status === 'alive' && showAlive) statusMatch = true;
+                if (b.status === 'sold' && showSold) statusMatch = true;
+                if (b.status === 'dead' && showDead) statusMatch = true;
+                return genderMatch && statusMatch;
+            });
+            
+            if (currentBreederView === 'grid') {
+                grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
+                filteredBreeders.forEach(breeder => {
+                    const card = document.createElement('div');
+                    card.className = `bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden card-hover flex flex-col ${breeder.status !== 'alive' ? 'opacity-70 grayscale-[30%]' : ''}`;
+                    card.dataset.id = breeder.id;
+                    
+                    let statusBadge = '';
+                    if(breeder.status === 'sold') statusBadge = `<span class="px-2 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-700">ขายแล้ว</span>`;
+                    else if (breeder.status === 'dead') statusBadge = `<span class="px-2 py-1 rounded-md text-xs font-semibold bg-rose-100 text-rose-700">ตาย</span>`;
+
+                    const hasPhoto = breeder.photos && breeder.photos.length > 0;
+
+                    card.innerHTML = `
+                         <div class="relative w-full aspect-video bg-slate-100 group ${hasPhoto ? 'cursor-pointer' : ''} overflow-hidden" ${hasPhoto ? `onclick="openBreederMainPhoto('${breeder.id}')"` : ''}>
+                            ${hasPhoto ? 
+                                `<img src="${breeder.photos[0].data}" alt="${breeder.name}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">` : 
+                                `<div class="absolute inset-0 flex items-center justify-center text-5xl">${breeder.gender === 'male' ? '🐓' : '🐔'}</div>`}
+                            <div class="absolute top-3 left-3 flex gap-2">
+                                <span class="px-2 py-1 rounded-md text-xs font-bold shadow-sm ${breeder.gender === 'male' ? 'bg-blue-600 text-white' : 'bg-pink-500 text-white'}">${breeder.gender === 'male' ? 'พ่อพันธุ์' : 'แม่พันธุ์'}</span>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                         <div class="p-5 flex-1 flex flex-col">
+                             <h3 class="font-bold text-lg text-slate-800 mb-1">${breeder.name}</h3>
+                             <p class="text-slate-500 text-sm mb-4 font-medium flex items-center gap-1"><i class="ph ph-hash"></i> ${breeder.code || 'ไม่มีรหัส'} <span class="mx-1">•</span> <i class="ph ph-dna"></i> ${breeder.breed || 'ไม่ระบุ'}</p>
+                             <div class="mt-auto grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
+                                <button onclick="editBreeder(this)" class="bg-slate-50 hover:bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
+                                <button onclick="openBreederPhotoModal('${breeder.id}')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-image"></i> รูปภาพ</button>
+                                <button onclick="deleteBreeder('${breeder.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-trash"></i> ลบ</button>
+                             </div>
+                         </div>`;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.className = 'space-y-3';
+                 filteredBreeders.forEach(breeder => {
+                    const listItem = document.createElement('div');
+                    listItem.className = `bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-4 ${breeder.status !== 'alive' ? 'opacity-70' : ''}`;
+                    listItem.dataset.id = breeder.id;
+
+                    let statusBadge = '';
+                    if(breeder.status === 'sold') statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700">ขายแล้ว</span>`;
+                    else if (breeder.status === 'dead') statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-100 text-rose-700">ตาย</span>`;
+                    else statusBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700">มีชีวิต</span>`;
+                    
+                    const hasPhoto = breeder.photos && breeder.photos.length > 0;
+                    const imageHtml = hasPhoto ? 
+                        `<img src="${breeder.photos[0].data}" class="w-16 h-16 object-cover rounded-xl shadow-sm cursor-pointer hover:scale-105 transition-transform" onclick="openBreederMainPhoto('${breeder.id}')">` :
+                        `<div class="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center text-3xl shadow-inner">${breeder.gender === 'male' ? '🐓' : '🐔'}</div>`;
+
+                    listItem.innerHTML = `
+                        ${imageHtml}
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-3 mb-1">
+                                <h3 class="font-bold text-slate-800 text-lg">${breeder.name}</h3>
+                                ${statusBadge}
+                            </div>
+                            <p class="text-sm text-slate-500 font-medium">รหัส: ${breeder.code || '-'} | พันธุ์: ${breeder.breed || '-'}</p>
+                        </div>
+                        <div class="flex gap-2">
+                           <button onclick="editBreeder(this)" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 p-2.5 rounded-xl transition" title="แก้ไข"><i class="ph ph-pencil-simple text-lg"></i></button>
+                           <button onclick="openBreederPhotoModal('${breeder.id}')" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 p-2.5 rounded-xl transition" title="รูปภาพ"><i class="ph ph-image text-lg"></i></button>
+                        </div>
+                    `;
+                    grid.appendChild(listItem);
+                });
+            }
+
+            if (filteredBreeders.length === 0) grid.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 font-medium">ไม่พบข้อมูลตามตัวกรองที่เลือก</div>';
+            updateBreederSelects();
+        }
+
+        function createBatchCard(data) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-2xl p-6 card-shadow card-hover relative';
+            card.dataset.batchId = data.id;
+
+            const ageInDays = Math.floor((new Date() - new Date(data.birthDate)) / (1000 * 60 * 60 * 24));
+
+            card.innerHTML = `
+                <button onclick="deleteBatch('${data.id}')" class="absolute top-4 right-4 text-slate-300 hover:text-rose-500 transition">
+                    <i class="ph ph-trash text-xl"></i>
+                </button>
+                <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-800 mb-1">${data.name}</h3>
+                        <p class="text-slate-500 text-sm font-medium flex items-center gap-1"><i class="ph ph-calendar-blank"></i> ${new Date(data.birthDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-lg text-sm border border-emerald-200">อายุ ${ageInDays} วัน</span>
+                </div>
+                <div class="mb-6">
+                    <p class="text-sm font-medium text-slate-500 mb-3 bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">${data.parents}</p>
+                    <div class="flex justify-between text-sm bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <span class="text-blue-800 font-medium">เริ่ม: <span class="font-bold text-lg">${data.totalChicks}</span></span>
+                        <span class="text-emerald-700 font-medium">คงเหลือ: <span class="batch-alive font-bold text-lg">${data.chicks.filter(c => c.status === 'alive').length}</span></span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-3 mb-6">
+                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-xs text-slate-500 font-medium mb-1">อยู่</p>
+                        <p class="font-bold text-blue-600 text-lg batch-raising">${data.chicks.filter(c => c.status === 'alive').length}</p>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-xs text-slate-500 font-medium mb-1">ขาย</p>
+                        <p class="font-bold text-emerald-600 text-lg batch-sold">${data.chicks.filter(c => c.status === 'sold').length}</p>
+                    </div>
+                    <div class="text-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-xs text-slate-500 font-medium mb-1">ตาย</p>
+                        <p class="font-bold text-rose-600 text-lg batch-dead">${data.chicks.filter(c => c.status === 'dead').length}</p>
+                    </div>
+                    <div class="text-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <p class="text-xs text-emerald-600 font-medium mb-1">รายได้</p>
+                        <p class="font-bold text-emerald-700 batch-revenue text-sm">฿0</p>
+                    </div>
+                </div>
+                <button onclick="openBatchDetails('${data.id}')" class="w-full bg-white border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 text-slate-700 font-medium py-3 rounded-xl transition flex items-center justify-center gap-2">
+                    จัดการรายตัว <i class="ph ph-arrow-right"></i>
+                </button>
+            `;
+            return card;
+        }
+
+        function filterBreeders(type, btn) { currentGenderFilter = type; updateButtonClasses(btn, '.breeder-filter-btn'); renderBreeders(); }
+        function toggleBreederView(view, btn) { currentBreederView = view; updateButtonClasses(btn, '.breeder-view-btn'); renderBreeders(); }
+        
+        function updateButtonClasses(activeBtn, selector) {
+            document.querySelectorAll(selector).forEach(b => { b.classList.remove('bg-white', 'text-slate-800', 'shadow-sm'); b.classList.add('text-slate-600', 'bg-transparent'); });
+            activeBtn.classList.remove('text-slate-600', 'bg-transparent'); activeBtn.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+        }
+
+        function filterFinance(period, btn) {
+            currentFinancePeriod = period;
+            if(btn) {
+                document.querySelectorAll('.finance-filter-btn').forEach(b => { b.classList.remove('bg-emerald-600', 'text-white'); b.classList.add('text-slate-600', 'bg-transparent'); });
+                btn.classList.add('bg-emerald-600', 'text-white'); btn.classList.remove('text-slate-600', 'bg-transparent');
+            }
+            const today = new Date(); today.setHours(0,0,0,0);
+            let filtered = financeDataStore.filter(t => {
+                const date = new Date(t.date);
+                if (period === 'daily') return date.setHours(0,0,0,0) === today.getTime();
+                if (period === 'weekly') return date >= new Date(today.setDate(today.getDate() - 7));
+                if (period === 'monthly') return date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear();
+                if (period === 'yearly') return date.getFullYear() === new Date().getFullYear();
+                return true;
+            });
+            renderTransactionList(filtered); updateFinanceSummary(filtered); renderFinanceChart(filtered, period);
+        }
+
+        function updateChickVisuals(chickId) {
+            const chickElement = document.querySelector(`[data-chick-id="${chickId}"]`);
+            if (!chickElement) return;
+            const batch = batchesDataStore[currentBatchId];
+            const chick = batch.chicks.find(c => c.id == chickId);
+            if (!chick) return;
+
+            const statusBadge = chickElement.querySelector('.status-badge');
+            statusBadge.className = 'inline-block px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold status-badge shadow-sm border';
+            
+            switch (chick.status) {
+                case 'alive': statusBadge.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200'); statusBadge.textContent = 'มีชีวิต'; break;
+                case 'sold': statusBadge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200'); statusBadge.textContent = 'ขายแล้ว'; break;
+                case 'dead': statusBadge.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-200'); statusBadge.textContent = 'ตาย'; break;
+            }
+
+            const iconContainer = chickElement.querySelector('.aspect-square');
+            iconContainer.className = `aspect-square bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:ring-2 ring-emerald-500 transition-all overflow-hidden border border-slate-200 ${chick.status === 'dead' ? 'opacity-50 grayscale' : ''}`;
+            
+            if (chick.photos && chick.photos.length > 0) {
+                iconContainer.innerHTML = `<img src="${chick.photos[0].data}" class="w-full h-full object-cover">`;
+            } else {
+                iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">${chick.status === 'sold' ? '💰' : (chick.status === 'dead' ? '💀' : '🐣')}</span>`;
+            }
+        }
+
+        function renderChickGallery(batchId) {
+            const gallery = document.getElementById('chickGallery');
+            if(!gallery) return;
+            gallery.innerHTML = '';
+            const batch = batchesDataStore[batchId];
+            if (batch && batch.chicks) {
+                batch.chicks.forEach(chick => {
+                    const el = document.createElement('div');
+                    el.className = 'relative group chick-item text-center';
+                    el.dataset.chickId = chick.id;
+                    el.onclick = () => openChickUpdateModal(el);
+                    el.innerHTML = `
+                        <div class="aspect-square mb-2"></div>
+                        <span class="text-sm font-bold text-slate-700 block mb-1">${chick.code || `#${chick.id}`}</span>
+                        <div class="status-badge"></div>
+                    `;
+                    gallery.appendChild(el);
+                    updateChickVisuals(chick.id);
+                });
+            }
+        }
+        
+        function renderTransactionList(transactions) {
+            const list = document.getElementById('transactionList');
+            if(!list) return;
+            list.innerHTML = '';
+            if (transactions.length === 0) { list.innerHTML = '<div class="text-center text-slate-400 py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">ไม่มีรายการในช่วงเวลานี้</div>'; return; }
+            transactions.slice().reverse().forEach(trans => {
+                const isInc = trans.type === 'income';
+                list.innerHTML += `
+                    <div class="flex justify-between items-center p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${isInc ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}"><i class="ph ${isInc ? 'ph-arrow-down-left' : 'ph-arrow-up-right'} text-xl"></i></div>
+                            <div><p class="font-bold text-slate-800">${trans.note}</p><p class="text-xs text-slate-500 font-medium">${new Date(trans.date).toLocaleDateString('th-TH')}</p></div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg ${isInc ? 'text-emerald-600' : 'text-rose-600'}">${isInc ? '+' : '-'}฿${trans.amount.toLocaleString()}</span>
+                            <button onclick="deleteTransaction('${trans.id}')" class="text-slate-300 hover:text-rose-500 p-1"><i class="ph ph-trash text-lg"></i></button>
+                        </div>
+                    </div>`;
+            });
+        }
+        
+        function showAddBreederModal() { document.getElementById('addBreederModal').classList.remove('hidden'); }
+        function closeAddBreederModal() { document.getElementById('addBreederModal').classList.add('hidden'); }
+        function showEditBreederModal() { document.getElementById('editBreederModal').classList.remove('hidden'); }
+        function closeEditBreederModal() { document.getElementById('editBreederModal').classList.add('hidden'); }
+        function showAddChickBatchModal() { updateBreederSelects(); document.getElementById('addChickBatchModal').classList.remove('hidden'); }
+        function closeAddChickBatchModal() { document.getElementById('addChickBatchModal').classList.add('hidden'); }
+        function closeEditBatchModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
+        function closeBreederPhotoModal() { document.getElementById('breederPhotoModal').classList.add('hidden'); }
+        function goBackToChicks() { showSection('chicks', document.querySelector('button[onclick*="chicks"]')); }
+
+        function toggleBreederStatusFields() {
+            const status = document.getElementById('editBreederStatus').value;
+            document.getElementById('editBreederSaleFields').classList.toggle('hidden', status !== 'sold');
+            document.getElementById('editBreederDeathFields').classList.toggle('hidden', status !== 'dead');
+        }
+
+        function updateBreederSelects(fatherId = 'fatherSelect', motherId = 'motherSelect') {
+            const f = document.getElementById(fatherId), m = document.getElementById(motherId);
+            if(!f || !m) return;
+            f.innerHTML = '<option value="">เลือกพ่อพันธุ์</option>'; m.innerHTML = '<option value="">เลือกแม่พันธุ์</option>';
+            breedersDataStore.forEach(b => {
+                const opt = `<option value="${b.name}">${b.name}</option>`;
+                if(b.gender === 'male') f.innerHTML += opt; else m.innerHTML += opt;
+            });
+        }
+
+        function updateTransactionCategories() {
+            const type = document.getElementById('transactionType').value;
+            const sel = document.getElementById('transactionCategory');
+            if(!sel) return;
+            sel.innerHTML = '';
+            const cats = type === 'income' ? {'chicken-sale': 'ขายไก่', 'other': 'อื่นๆ'} : {'chicken-purchase': 'ซื้อไก่', 'feed': 'อาหารไก่', 'medicine': 'ยาและวิตามิน', 'equipment': 'อุปกรณ์', 'other': 'อื่นๆ'};
+            for (const [v, t] of Object.entries(cats)) sel.innerHTML += `<option value="${v}">${t}</option>`;
+        }
+
+        function updateFinanceSummary(transactions) {
+            let i = 0, e = 0; transactions.forEach(t => t.type === 'income' ? i += t.amount : e += t.amount);
+            document.getElementById('financeIncome').textContent = `฿${i.toLocaleString()}`;
+            document.getElementById('financeExpense').textContent = `฿${e.toLocaleString()}`;
+            document.getElementById('financeNetProfit').textContent = `฿${(i - e).toLocaleString()}`;
+            if(currentFinancePeriod === 'monthly') document.getElementById('monthlyProfit').textContent = `฿${(i - e).toLocaleString()}`;
+        }
+
+        function openBatchDetails(batchId) { currentBatchId = batchId; showSection('batchDetails'); renderBatchDetails(batchId); }
+        function renderBatchDetails(batchId) {
+            const data = batchesDataStore[batchId];
+            if (!data) return;
+            document.getElementById('batchDetailName').textContent = data.name;
+            document.getElementById('batchDetailParents').textContent = data.parents;
+            const birthDate = new Date(data.birthDate);
+            document.getElementById('batchDetailBirthDate').textContent = birthDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            const diffDays = Math.floor(Math.abs(new Date() - birthDate) / (1000 * 60 * 60 * 24)); 
+            document.getElementById('batchDetailAge').textContent = `${Math.floor(diffDays / 30)} เดือน ${diffDays % 30} วัน`;
+            
+            document.getElementById('batchDetailNote').textContent = data.note || '-';
+
+            updateBatchStatistics(batchId); renderChickGallery(batchId);
+        }
+
+        function showEditBatchModal() {
+             const batch = batchesDataStore[currentBatchId];
+            if(!batch) return;
+            updateBreederSelects('editBatchFatherSelect', 'editBatchMotherSelect');
+            const [father, mother] = batch.parents.split(' x ');
+            document.getElementById('editBatchFatherSelect').value = father?.trim() || '';
+            document.getElementById('editBatchMotherSelect').value = mother?.trim() || '';
+            document.getElementById('editBatchBirthDate').value = batch.birthDate;
+            document.getElementById('addChickCount').value = '';
+            document.getElementById('editBatchNote').value = batch.note || ''; 
+            document.getElementById('editBatchModal').classList.remove('hidden'); 
+        }
+
+        function renderBatchCard(batchId) {
+            const oldCard = document.querySelector(`[data-batch-id="${batchId}"]`);
+            if (oldCard) {
+                const newCard = createBatchCard(batchesDataStore[batchId]);
+                oldCard.replaceWith(newCard);
+            }
+        }
+
+        function updateBatchStatistics(id) { 
+            const b = batchesDataStore[id]; 
+            if(!b) return; 
+            const alive = b.chicks.filter(c => c.status === 'alive').length;
+            const sold = b.chicks.filter(c => c.status === 'sold').length;
+            const dead = b.chicks.filter(c => c.status === 'dead').length;
+            const rev = b.chicks.filter(c => c.status === 'sold').reduce((s, c) => s + (parseInt(c.salePrice) || 0), 0); 
+            b.aliveChicks = alive; b.soldChicks = sold; b.deadChicks = dead; b.revenue = rev; 
+            
+            const d = document.getElementById('batchDetails'); 
+            if(!d.classList.contains('hidden') && currentBatchId === id) { 
+                d.querySelector('#batchDetailAlive').textContent = alive; 
+                d.querySelector('#batchDetailSold').textContent = sold; 
+                d.querySelector('#batchDetailDead').textContent = dead; 
+                d.querySelector('#batchDetailRevenue').textContent = `฿${rev.toLocaleString()}`; 
+                d.querySelector('#batchDetailTotal').textContent = b.totalChicks; 
+                d.querySelector('#batchDetailSurvivalRate').textContent = `${b.totalChicks > 0 ? Math.round(((alive + sold)/b.totalChicks)*100) : 0}%`; 
+                d.querySelector('#batchMaleCount').textContent = b.chicks.filter(c=>c.gender==='male').length; 
+                d.querySelector('#batchFemaleCount').textContent = b.chicks.filter(c=>c.gender==='female').length; 
+                d.querySelector('#batchUnknownGenderCount').textContent = b.chicks.filter(c=>c.gender==='unknown').length; 
+            } 
+            const c = document.querySelector(`[data-batch-id="${id}"]`); 
+            if(c) { 
+                c.querySelector('.batch-alive').textContent = alive; 
+                c.querySelector('.batch-raising').textContent = alive; 
+                c.querySelector('.batch-sold').textContent = sold; 
+                c.querySelector('.batch-dead').textContent = dead; 
+                c.querySelector('.batch-revenue').textContent = `฿${rev.toLocaleString()}`; 
+            } 
+        }
+
+        function updateGlobalStatistics() {
+            let totalAlive = 0, totalSold = 0, totalDead = 0, totalInitial = 0, totalRevenue = 0;
+            for (const id in batchesDataStore) {
+                const b = batchesDataStore[id];
+                totalAlive += b.aliveChicks || 0; totalSold += b.soldChicks || 0; totalDead += b.deadChicks || 0; totalInitial += b.totalChicks || 0; totalRevenue += b.revenue || 0;
+            }
+            const sRate = totalInitial > 0 ? Math.round(((totalAlive + totalSold) / totalInitial) * 100) : 0;
+            const saleRate = totalInitial > 0 ? Math.round((totalSold / totalInitial) * 100) : 0;
+            
+            document.getElementById('totalChicks').textContent = totalAlive;
+            document.getElementById('dashTotalChicks').textContent = totalAlive;
+            document.getElementById('dashSoldChicks').textContent = totalSold;
+            document.getElementById('dashDeadChicks').textContent = totalDead;
+            document.getElementById('dashSurvivalRate').textContent = `${sRate}%`;
+            
+            document.getElementById('totalMales').textContent = breedersDataStore.filter(b => b.gender === 'male' && b.status === 'alive').length;
+            document.getElementById('totalFemales').textContent = breedersDataStore.filter(b => b.gender === 'female' && b.status === 'alive').length;
+            
+            document.getElementById('reportSurvivalRateText').textContent = `${sRate}%`;
+            document.getElementById('reportSurvivalRateBar').style.width = `${sRate}%`;
+            document.getElementById('reportSaleRateText').textContent = `${saleRate}%`;
+            document.getElementById('reportSaleRateBar').style.width = `${saleRate}%`;
+            document.getElementById('reportAvgSalePrice').textContent = `฿${totalSold > 0 ? Math.round(totalRevenue / totalSold).toLocaleString() : 0}`;
+            
+            const exp = financeDataStore.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('reportAvgProfitPerChick').textContent = `฿${totalSold > 0 ? Math.round((totalRevenue - exp) / totalSold).toLocaleString() : 0}`;
+            
+            if(document.getElementById('reports').classList.contains('hidden') === false) renderReportsPage();
+        }
+
+        // --- Save and Load Functions (Cloud Sync) ---
+        function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
+            // รวบรวมข้อมูลทั้งหมด
+            const farmDataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
+            
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
+            localStorage.setItem('farmData', JSON.stringify(farmDataObj));
+            
+            if (!currentUser) return;
+            
+            // ทำความสะอาดและเข้ารหัสข้อมูลเป็น String เพื่อป้องกัน Error: Property array contains an invalid nested entity
+            const dataToSave = { 
+                payload: JSON.stringify(farmDataObj),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true })
+                .then(() => {
+                    const saveStatusEl = document.getElementById('saveStatus');
+                    if (saveStatusEl) {
+                        saveStatusEl.classList.remove('opacity-0');
+                        clearTimeout(saveStatusTimeout);
+                        saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
+                    }
+                }).catch(err => {
+                    console.error("Save Error:", err);
+                    showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
+                });
+        }
         
         function loadDataFromCloud() {
             if (!currentUser) return;
@@ -1766,242 +2374,34 @@
             document.getElementById('syncOverlay').classList.remove('flex');
         }
 
-        function renderFinanceChart(data, period) {
-            if (financeChartInstance) financeChartInstance.destroy();
-            const ctx = document.getElementById('financeChart').getContext('2d');
-            const grouped = {};
-            data.forEach(t => {
-                const d = new Date(t.date); let k;
-                if (period === 'daily') k = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit'});
-                else if (period === 'weekly') k = d.toLocaleDateString('th-TH', { weekday: 'short' });
-                else if (period === 'monthly') k = d.getDate().toString();
-                else if (period === 'yearly') k = d.toLocaleDateString('th-TH', { month: 'short' });
-                else k = d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
-                if (!grouped[k]) grouped[k] = { i: 0, e: 0, d: d };
-                t.type === 'income' ? grouped[k].i += t.amount : grouped[k].e += t.amount;
-            });
-            const keys = Object.keys(grouped).sort((a,b) => grouped[a].d - grouped[b].d);
-            
-            financeChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: keys,
-                    datasets: [
-                        { label: 'รายรับ', data: keys.map(k=>grouped[k].i), borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.4 },
-                        { label: 'รายจ่าย', data: keys.map(k=>grouped[k].e), borderColor: '#e11d48', backgroundColor: 'rgba(225, 29, 72, 0.1)', fill: true, tension: 0.4 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } }
-            });
-        }
-
-        function editBreeder(btn) { const id = btn.closest('[data-id]').dataset.id; const b = breedersDataStore.find(x => x.id === id); if(!b) return; document.getElementById('editBreederId').value = id; document.getElementById('editBreederName').value = b.name; document.getElementById('editBreederCode').value = b.code; document.getElementById('editBreederBreed').value = b.breed; document.getElementById('editBreederSource').value = b.source; document.getElementById('editBreederStatus').value = b.status || 'alive'; document.getElementById('editBreederSalePrice').value = b.salePrice || ''; document.getElementById('editBreederSaleDate').value = b.saleDate || new Date().toISOString().split('T')[0]; document.getElementById('editBreederDeathDate').value = b.deathDate || new Date().toISOString().split('T')[0]; toggleBreederStatusFields(); showEditBreederModal(); }
-        function openBreederPhotoModal(id) { document.getElementById('currentBreederIdForPhotos').value = id; document.getElementById('breederPhotoModal').classList.remove('hidden'); updateBreederPhotoGallery(id); }
-        function deleteBreeder(id) { showConfirmation('ยืนยัน', 'ลบไก่พันธุ์และรายการบัญชีที่เกี่ยวข้อง?', () => { const i = breedersDataStore.findIndex(b => b.id === id); if (i > -1) { const b = breedersDataStore[i]; if (b.purchaseTransactionId) financeDataStore = financeDataStore.filter(t => t.id !== b.purchaseTransactionId); if (b.saleTransactionId) financeDataStore = financeDataStore.filter(t => t.id !== b.saleTransactionId); breedersDataStore.splice(i, 1); renderBreeders(); filterFinance(currentFinancePeriod); saveData(); updateGlobalStatistics(); showNotification('ลบสำเร็จ', 'success'); } }); }
-        function deleteBatch(id) { showConfirmation('ยืนยัน', 'ลบคอกนี้?', () => { delete batchesDataStore[id]; document.querySelector(`[data-batch-id="${id}"]`).remove(); saveData(); updateGlobalStatistics(); vaccineCalendar.renderCoopList(); }); }
-        function openChickUpdateModal(el) { const id = el.dataset.chickId; const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == id); document.getElementById('updateChickId').value = id; document.getElementById('chickStatus').value = c.status; document.getElementById('chickGender').value = c.gender; document.getElementById('chickCode').value = c.code || ''; document.getElementById('salePrice').value = c.salePrice || ''; const t = new Date().toISOString().split('T')[0]; document.getElementById('saleDate').value = c.saleDate || t; document.getElementById('deathDate').value = c.deathDate || t; toggleSaleFields(); updatePhotoGallery(id); document.getElementById('chickUpdateModal').classList.remove('hidden'); }
-        function closeChickUpdateModal() { document.getElementById('chickUpdateModal').classList.add('hidden'); document.getElementById('chickUpdateForm').reset(); toggleSaleFields(); }
-        function toggleSaleFields() { const s = document.getElementById('chickStatus').value; document.getElementById('saleFields').classList.toggle('hidden', s !== 'sold'); document.getElementById('deathFields').classList.toggle('hidden', s !== 'dead'); }
-        function deleteChick() { const id = document.getElementById('updateChickId').value; showConfirmation('ยืนยัน', 'ลบไก่ตัวนี้?', () => { const b = batchesDataStore[currentBatchId]; const i = b.chicks.findIndex(c => c.id == id); if (i > -1) { b.chicks.splice(i, 1); b.totalChicks--; renderChickGallery(currentBatchId); closeChickUpdateModal(); updateBatchStatistics(currentBatchId); saveData(); } }); }
-        function updateChickStatus(id, s, d) { const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == id); if(!c) return; Object.assign(c, d); c.status = s; if (s !== 'sold') { delete c.salePrice; delete c.saleDate; delete c.buyerName; delete c.saleNote; delete c.transactionId; } updateChickVisuals(id); }
-        function addTransactionFromChickSale(d) { const id = `trans-${Date.now()}`; financeDataStore.push({ id, type: 'income', category: 'chicken-sale', amount: parseFloat(d.price), note: d.note, date: d.date }); return id; }
-        function deleteTransaction(id) { showConfirmation('ยืนยัน', 'ลบรายการนี้?', () => { const i = financeDataStore.findIndex(t => t.id === id); if (i > -1) { const t = financeDataStore[i]; if (t.category === 'chicken-sale') { let f = false; for (const bId in batchesDataStore) { if(f) break; const c = batchesDataStore[bId].chicks.find(x => x.transactionId === id); if(c) { c.status = 'alive'; delete c.salePrice; delete c.saleDate; delete c.transactionId; f = true; } } } financeDataStore.splice(i, 1); filterFinance(currentFinancePeriod); updateGlobalStatistics(); saveData(); showNotification('ลบสำเร็จ'); } }); }
-        
-        // --- CROPPER & UPLOAD LOGIC (NEW) ---
-        function processCropQueue() {
-            if (imageCropQueue.length === 0) {
-                document.getElementById('cropModal').classList.add('hidden');
-                if(cropperInstance) {
-                    cropperInstance.destroy();
-                    cropperInstance = null;
-                }
-                return;
-            }
-            
-            const currentItem = imageCropQueue[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                showCropModal(e.target.result, currentItem);
-            };
-            reader.readAsDataURL(currentItem.file);
-        }
-
-        function showCropModal(imgSrc, item) {
-            const modal = document.getElementById('cropModal');
-            const img = document.getElementById('cropImage');
-            
-            // อัปเดตข้อความให้รู้ว่าเหลืออีกกี่รูป (ถ้าโหลดหลายรูป)
-            document.getElementById('cropModalTitle').textContent = `ปรับแต่งรูปภาพ (เหลืออีก ${imageCropQueue.length} รูป)`;
-            
-            img.src = imgSrc;
-            modal.classList.remove('hidden');
-
-            if (cropperInstance) cropperInstance.destroy();
-            cropperInstance = new Cropper(img, {
-                viewMode: 1,
-                dragMode: 'move', // ให้ลากเพื่อเลื่อนรูปได้
-                autoCropArea: 0.9,
-                restore: false,
-                guides: true,
-                center: true,
-                highlight: false,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                toggleDragModeOnDblclick: false,
-            });
-        }
-
-        // แทนที่ฟังก์ชันเดิม ให้โยนไฟล์เข้าคิวตัดรูปก่อน
-        function queueChickPhotoUpload(e) {
-            if (IMGBB_API_KEY === "ใส่_API_KEY_ของคุณที่นี่") {
-                showNotification("กรุณาใส่ ImgBB API Key ในโค้ดก่อนครับ", "error");
-                return;
-            }
-            const fs = Array.from(e.target.files); 
-            const id = document.getElementById('updateChickId').value; 
-            const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == id); 
-            if(!c) return; 
-            c.photos = c.photos || []; 
-            if (fs.length > 5 - c.photos.length) {
-                showNotification(`เพิ่มได้อีก ${5 - c.photos.length} รูป`, 'warning');
-                e.target.value = ''; 
-                return;
-            }
-            
-            fs.forEach(f => {
-                imageCropQueue.push({ file: f, type: 'chick', id: id, batchId: currentBatchId });
-            });
-            e.target.value = '';
-            processCropQueue();
-        }
-
-        function queueBreederPhotoUpload(e) {
-            if (IMGBB_API_KEY === "ใส่_API_KEY_ของคุณที่นี่") {
-                showNotification("กรุณาใส่ ImgBB API Key ในโค้ดก่อนครับ", "error");
-                return;
-            }
-            const id = document.getElementById('currentBreederIdForPhotos').value; 
-            const b = breedersDataStore.find(x => x.id === id); 
-            b.photos = b.photos || []; 
-            const fs = Array.from(e.target.files);
-            
-            if (fs.length > 10 - b.photos.length) {
-                showNotification(`เพิ่มได้อีก ${10 - b.photos.length} รูป`, 'warning');
-                e.target.value = '';
-                return;
-            }
-            
-            fs.forEach(f => {
-                imageCropQueue.push({ file: f, type: 'breeder', id: id });
-            });
-            e.target.value = '';
-            processCropQueue();
-        }
-
-        async function uploadCroppedImage(dataUrl, item) {
-            try {
-                const base64Data = dataUrl.split(',')[1];
-                const formData = new FormData();
-                formData.append('image', base64Data);
-
-                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    const downloadUrl = result.data.url;
-                    const uniquePhotoId = Date.now() + Math.random().toString(36).substring(7);
-                    
-                    if (item.type === 'breeder') {
-                        const b = breedersDataStore.find(x => x.id === item.id);
-                        if (b) {
-                            b.photos.push({ id: uniquePhotoId, data: downloadUrl });
-                            updateBreederPhotoGallery(item.id); 
-                            renderBreeders(); 
-                            saveData();
-                        }
-                    } else if (item.type === 'chick') {
-                        const batch = batchesDataStore[item.batchId];
-                        const c = batch?.chicks.find(x => x.id == item.id);
-                        if (c) {
-                            c.photos.push({ id: uniquePhotoId, name: item.file.name, data: downloadUrl });
-                            updatePhotoGallery(item.id); 
-                            updateChickVisuals(item.id); 
-                            saveData();
-                        }
-                    }
-                    showNotification('อัปโหลดรูปลงสำเร็จ!', 'success');
-                } else {
-                    throw new Error(result.error.message);
-                }
-            } catch (error) {
-                console.error('Error uploading to ImgBB:', error);
-                showNotification('เกิดข้อผิดพลาดในการส่งรูปลง ImgBB', 'error');
-            }
-            
-            // ขยับคิว และเริ่มตัดรูปถัดไป (ถ้ามี)
-            imageCropQueue.shift();
-            processCropQueue();
-        }
-
-        // Update Gallery Functions
-        function updatePhotoGallery(id) { 
-            const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == id); 
-            const g = document.getElementById('chickPhotoGallery'); 
-            document.getElementById('photoCount').textContent = c?.photos?.length || 0; 
-            g.innerHTML = (c?.photos||[]).map(p => `
-            <div class="relative bg-slate-100 rounded-lg overflow-hidden border border-slate-200 group cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
-                <img src="${p.data}" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-300">
-                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
-                    <button onclick="event.stopPropagation(); deletePhoto('${id}','${p.id}')" type="button" class="bg-rose-500 text-white p-2 rounded-lg">ลบ</button>
-                </div>
-            </div>`).join(''); 
-        }
-
-        function deletePhoto(cid, pid) { const c = batchesDataStore[currentBatchId].chicks.find(x => x.id == cid); c.photos = c.photos.filter(p => p.id != pid); updatePhotoGallery(cid); updateChickVisuals(cid); saveData(); }
-        
-        function updateBreederPhotoGallery(id) { 
-            const b = breedersDataStore.find(x => x.id === id); 
-            document.getElementById('breederPhotoCount').textContent = b?.photos?.length || 0; 
-            document.getElementById('breederPhotoGallery').innerHTML = (b?.photos||[]).map(p => `
-            <div class="relative rounded-xl overflow-hidden group cursor-pointer" onclick="openLightbox(this.querySelector('img').src)">
-                <img src="${p.data}" class="w-full h-full object-cover aspect-square group-hover:scale-105 transition-transform duration-300">
-                <button onclick="event.stopPropagation(); deleteBreederPhoto('${id}','${p.id}')" class="absolute top-2 right-2 bg-rose-500 text-white p-1.5 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"><i class="ph ph-trash"></i></button>
-            </div>`).join(''); 
-        }
-
-        function deleteBreederPhoto(bid, pid) { const b = breedersDataStore.find(x => x.id === bid); b.photos = b.photos.filter(p => p.id != pid); updateBreederPhotoGallery(bid); renderBreeders(); saveData(); }
-
-        // Dashboard & Reports rendering
-        function renderDashboard() {
-            let all = [];
-            financeDataStore.forEach(t => all.push({ date: t.date, type: 'finance', data: t }));
+        function renderAll() {
+            // เช็คและซ่อมแซมโครงสร้างข้อมูลให้สมบูรณ์
+            breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
             Object.values(batchesDataStore).forEach(b => {
-                all.push({ date: b.birthDate, type: 'birth', data: b });
-                if(b.vaccinations) b.vaccinations.forEach(v => { if(v.status === 'completed') all.push({ date: v.completedDate, type: 'vaccine', data: { ...v, coopName: b.name } }); });
+                if (!b.vaccinations) b.vaccinations = vaccineCalendar.generateVaccinationSchedule(b.birthDate);
+                if (b.chicks) b.chicks.forEach(c => { if (!c.photos) c.photos = []; });
             });
-            all.sort((a, b) => new Date(b.date) - new Date(a.date));
-            const container = document.getElementById('dashboardRecentActivities'); container.innerHTML = '';
-            all.slice(0, 5).forEach(act => {
-                if(act.type === 'finance') container.innerHTML += `<div class="flex justify-between p-3 bg-slate-50 rounded-xl border border-slate-100"><div><p class="font-bold text-slate-800">${act.data.note}</p><p class="text-xs text-slate-500">${new Date(act.date).toLocaleDateString('th-TH')}</p></div><span class="font-bold ${act.data.type === 'income' ? 'text-emerald-600' : 'text-rose-600'}">${act.data.type==='income'?'+':'-'}฿${act.data.amount.toLocaleString()}</span></div>`;
-                else if(act.type === 'birth') container.innerHTML += `<div class="flex justify-between p-3 bg-amber-50 rounded-xl border border-amber-100"><div><p class="font-bold text-amber-800"><i class="ph ph-egg"></i> คอกใหม่: ${act.data.name}</p><p class="text-xs text-amber-600/70">${new Date(act.date).toLocaleDateString('th-TH')}</p></div><span class="font-bold text-amber-700">${act.data.totalChicks} ตัว</span></div>`;
-                else if(act.type === 'vaccine') container.innerHTML += `<div class="flex justify-between p-3 bg-blue-50 rounded-xl border border-blue-100"><div><p class="font-bold text-blue-800"><i class="ph ph-syringe"></i> วัคซีน: ${act.data.name}</p><p class="text-xs text-blue-600/70">${act.data.coopName} | ${new Date(act.date).toLocaleDateString('th-TH')}</p></div><span class="font-bold text-blue-700">สำเร็จ</span></div>`;
-            });
-
-            const alerts = document.getElementById('dashboardVaccineAlerts'); alerts.innerHTML = '';
-            let upcoming = []; const t = new Date(); t.setHours(0,0,0,0); const t3 = new Date(t); t3.setDate(t.getDate()+3);
-            Object.values(batchesDataStore).forEach(b => {
-                if(b.vaccinations) b.vaccinations.forEach(v => { const vd = new Date(v.date); vd.setHours(0,0,0,0); if(v.status === 'pending' && vd >= t && vd <= t3) upcoming.push({ ...v, coopName: b.name, d: Math.ceil((vd-t)/86400000) }); });
-            });
-            upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
-            if(!upcoming.length) alerts.innerHTML = '<div class="text-center text-slate-400 py-4">ไม่มีรายการแจ้งเตือน</div>';
-            else upcoming.forEach(a => alerts.innerHTML += `<div class="flex justify-between p-3 bg-purple-50 rounded-xl border border-purple-100"><div><p class="font-bold text-purple-800">${a.coopName}: ${a.name}</p><p class="text-xs text-purple-600/70">${new Date(a.date).toLocaleDateString('th-TH')}</p></div><span class="font-bold text-purple-700">${a.d === 0 ? 'วันนี้' : `อีก ${a.d} วัน`}</span></div>`);
+            
+            const grid = document.getElementById('chickBatchesGrid'); 
+            if (grid) {
+                grid.innerHTML = '';
+                Object.values(batchesDataStore).forEach(b => grid.appendChild(createBatchCard(b)));
+            }
+            
+            renderBreeders(); 
+            filterFinance(currentFinancePeriod); 
+            updateGlobalStatistics(); 
+            if (window.vaccineCalendar) window.vaccineCalendar.renderCoopList(); 
+            renderDashboard();
+            
+            if (currentBatchId && batchesDataStore[currentBatchId]) {
+                renderBatchDetails(currentBatchId);
+            }
         }
 
         function renderReportsPage() {
             const tc = document.getElementById('topBreedersContainer');
+            if(!tc) return;
             let stats = [];
             breedersDataStore.filter(b=>b.gender==='female').forEach(b => {
                 let off = 0, sold = 0, rev = 0;
