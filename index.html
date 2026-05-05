@@ -86,6 +86,13 @@
         </div>
     </div>
 
+    <!-- Sync Overlay (โหลดข้อมูลจาก Cloud ป้องกันการเซฟทับ) -->
+    <div id="syncOverlay" class="fixed inset-0 bg-white/95 z-[10001] hidden flex-col items-center justify-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-600 mb-6 shadow-lg"></div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">กำลังซิงค์ข้อมูล...</h2>
+        <p class="text-slate-500 font-medium text-center px-4">กรุณารอสักครู่ ระบบกำลังดึงข้อมูลฟาร์มของคุณจาก Cloud</p>
+    </div>
+
     <!-- Mobile Sidebar Backdrop -->
     <div id="sidebarBackdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 lg:hidden hidden backdrop-blur-sm transition-opacity"></div>
 
@@ -966,6 +973,7 @@
 
         let isLoginMode = true;
         let currentUser = null;
+        let isCloudDataLoaded = false; // สำคัญมาก: ป้องกันการเซฟทับข้อมูลคลาวด์ตอนโหลดเริ่มต้น
         
         // --- CROPPER VARIABLES ---
         let imageCropQueue = [];
@@ -1414,7 +1422,6 @@
         // --- Core Application Initialization ---
         document.addEventListener('DOMContentLoaded', function() {
             vaccineCalendar.init();
-            loadData(); // Load purely from LocalStorage now
             
             const today = new Date();
             const dateEl = document.getElementById('currentDate');
@@ -1489,9 +1496,15 @@
                 currentUser = user;
                 authOverlay.classList.add('hidden');
                 document.getElementById('userIdDisplay').textContent = user.email;
+                
+                // เปิดหน้าจอซิงค์ข้อมูล
+                document.getElementById('syncOverlay').classList.remove('hidden');
+                document.getElementById('syncOverlay').classList.add('flex');
+                
                 loadDataFromCloud();
             } else {
                 currentUser = null;
+                isCloudDataLoaded = false;
                 authOverlay.classList.remove('hidden');
                 document.getElementById('authSubmitBtn').disabled = false;
                 document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'เข้าสู่ระบบ' : 'สมัครสมาชิกใหม่';
@@ -1581,19 +1594,32 @@
                     batchesDataStore = data.batches || {}; 
                     breedersDataStore = data.breeders || []; 
                     financeDataStore = data.finance || [];
+                    
+                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    
+                    // อัปเดตข้อมูลลง Local Storage ด้วย เพื่อให้เครื่องนี้มีข้อมูลล่าสุด
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+                    
                     renderAll();
+                    document.getElementById('syncOverlay').classList.add('hidden');
+                    document.getElementById('syncOverlay').classList.remove('flex');
                 } else {
                     // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
                     migrateLocalData();
                 }
             }, err => {
                 console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
                 showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
             });
         }
 
         function migrateLocalData() {
             const str = localStorage.getItem('farmData');
+            
+            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            
             if (str) {
                 try {
                     const data = JSON.parse(str);
@@ -1602,13 +1628,18 @@
                         breedersDataStore = data.breeders || []; 
                         financeDataStore = data.finance || [];
                         saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
-                        showNotification("สำรองข้อมูลเดิมขึ้น Cloud ให้เรียบร้อย!", "success");
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
                     }
                 } catch (e) { 
                     console.error(e);
                 }
+            } else {
+                saveData(); // Save empty document to cloud
             }
+            
             renderAll();
+            document.getElementById('syncOverlay').classList.add('hidden');
+            document.getElementById('syncOverlay').classList.remove('flex');
         }
 
         function renderAll() {
@@ -1638,6 +1669,8 @@
 
         // --- Save Data Function (Cloud Sync) ---
         function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
             // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
             localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
             
@@ -2221,6 +2254,8 @@
 
         // --- Save and Load Functions (Local Storage Only) ---
         function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
             // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
             localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
             
@@ -2247,36 +2282,60 @@
                 });
         }
         
-        function loadData() {
+        function loadDataFromCloud() {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    batchesDataStore = data.batches || {}; 
+                    breedersDataStore = data.breeders || []; 
+                    financeDataStore = data.finance || [];
+                    
+                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    
+                    // บันทึกลงเครื่องเพื่อเป็น Backup ออฟไลน์
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+                    
+                    renderAll();
+                    document.getElementById('syncOverlay').classList.add('hidden');
+                    document.getElementById('syncOverlay').classList.remove('flex');
+                } else {
+                    // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
+                    migrateLocalData();
+                }
+            }, err => {
+                console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
+                showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
+            });
+        }
+
+        function migrateLocalData() {
             const str = localStorage.getItem('farmData');
+            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            
             if (str) {
                 try {
                     const data = JSON.parse(str);
-                    if(data) {
+                    if(data && (data.batches || data.breeders || data.finance)) {
                         batchesDataStore = data.batches || {}; 
                         breedersDataStore = data.breeders || []; 
                         financeDataStore = data.finance || [];
+                        saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
                     }
                 } catch (e) { 
-                    showNotification("เกิดข้อผิดพลาดในการโหลดข้อมูลเดิม", "error"); 
+                    console.error(e);
                 }
+            } else {
+                saveData(); // Save empty state to cloud to initialize document
             }
-
-            // Fallback & Initialize structures
-            breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
-            Object.values(batchesDataStore).forEach(b => {
-                if (!b.vaccinations) b.vaccinations = vaccineCalendar.generateVaccinationSchedule(b.birthDate);
-                if (b.chicks) b.chicks.forEach(c => { if (!c.photos) c.photos = []; });
-            });
             
-            const grid = document.getElementById('chickBatchesGrid'); grid.innerHTML = '';
-            Object.values(batchesDataStore).forEach(b => grid.appendChild(createBatchCard(b)));
-            
-            renderBreeders(); 
-            filterFinance(currentFinancePeriod); 
-            updateGlobalStatistics(); 
-            vaccineCalendar.renderCoopList(); 
-            renderDashboard();
+            renderAll();
+            document.getElementById('syncOverlay').classList.add('hidden');
+            document.getElementById('syncOverlay').classList.remove('flex');
         }
 
         function renderFinanceChart(data, period) {
