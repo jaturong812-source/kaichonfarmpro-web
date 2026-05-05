@@ -1617,7 +1617,6 @@
 
         function migrateLocalData() {
             const str = localStorage.getItem('farmData');
-            
             isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
             
             if (str) {
@@ -1676,10 +1675,15 @@
             
             if (!currentUser) return;
             
+            // ทำความสะอาดข้อมูลก่อนส่งขึ้น Cloud (ลบค่า undefined หรือ class ที่ซ้อนกันอยู่)
+            let cleanBatches = JSON.parse(JSON.stringify(batchesDataStore));
+            let cleanBreeders = JSON.parse(JSON.stringify(breedersDataStore));
+            let cleanFinance = JSON.parse(JSON.stringify(financeDataStore));
+
             const dataToSave = { 
-                batches: batchesDataStore, 
-                breeders: breedersDataStore, 
-                finance: financeDataStore,
+                batches: cleanBatches, 
+                breeders: cleanBreeders, 
+                finance: cleanFinance,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
@@ -2252,7 +2256,7 @@
             if(document.getElementById('reports').classList.contains('hidden') === false) renderReportsPage();
         }
 
-        // --- Save and Load Functions (Local Storage Only) ---
+        // --- Save and Load Functions (Cloud Sync) ---
         function saveData() {
             if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
             
@@ -2261,10 +2265,15 @@
             
             if (!currentUser) return;
             
+            // ทำความสะอาดข้อมูลก่อนส่งขึ้น Cloud (ลบค่า undefined หรือ class ที่ซ้อนกันอยู่)
+            let cleanBatches = JSON.parse(JSON.stringify(batchesDataStore));
+            let cleanBreeders = JSON.parse(JSON.stringify(breedersDataStore));
+            let cleanFinance = JSON.parse(JSON.stringify(financeDataStore));
+
             const dataToSave = { 
-                batches: batchesDataStore, 
-                breeders: breedersDataStore, 
-                finance: financeDataStore,
+                batches: cleanBatches, 
+                breeders: cleanBreeders, 
+                finance: cleanFinance,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             
@@ -2330,7 +2339,7 @@
                     console.error(e);
                 }
             } else {
-                saveData(); // Save empty state to cloud to initialize document
+                saveData(); // Save empty document to cloud
             }
             
             renderAll();
@@ -2605,23 +2614,35 @@
         }
 
         function restoreData() {
-            const f = document.getElementById('restoreFile').files[0]; if(!f) return showNotification('กรุณาเลือกไฟล์', 'warning');
+            const f = document.getElementById('restoreFile').files[0];
+            if (!f) return showNotification('กรุณาเลือกไฟล์', 'warning');
             const r = new FileReader();
             r.onload = e => {
-                try { 
-                    const d = JSON.parse(e.target.result); 
-                    if(d.batches) { 
-                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบ Cloud จะถูกเขียนทับ', () => { 
+                try {
+                    const d = JSON.parse(e.target.result);
+                    // เช็คว่าไฟล์มีโครงสร้างข้อมูลของแอป
+                    if (d.batches || d.breeders || d.finance) {
+                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบและบน Cloud จะถูกเขียนทับ', () => {
                             batchesDataStore = d.batches || {};
                             breedersDataStore = d.breeders || [];
                             financeDataStore = d.finance || [];
-                            saveData(); // อัปโหลดขึ้น Cloud ทันที
-                            showNotification('กู้คืนข้อมูลขึ้น Cloud สำเร็จ!', 'success');
-                        }); 
-                    } else throw new Error(); 
-                } 
-                catch(err) { showNotification('ไฟล์ไม่ถูกต้อง', 'error'); }
-            }; r.readAsText(f);
+                            
+                            isCloudDataLoaded = true; // ปลดล็อกป้องกันการเซฟ
+                            saveData(); // บันทึกลงเครื่อง และอัปโหลดขึ้น Cloud
+                            
+                            renderAll(); // ⭐️ บังคับให้หน้าจอดึงข้อมูลใหม่มาแสดงทันที
+                            document.getElementById('restoreFile').value = ''; // เคลียร์ชื่อไฟล์
+                            
+                            showNotification('กู้คืนข้อมูลสำเร็จ!', 'success');
+                        });
+                    } else throw new Error();
+                }
+                catch (err) {
+                    console.error("Restore Error:", err);
+                    showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
+                }
+            };
+            r.readAsText(f);
         }
     </script>
 </body>
