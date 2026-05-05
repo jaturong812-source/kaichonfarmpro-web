@@ -1133,6 +1133,29 @@
             };
         }
 
+        // --- ImgBB Upload Function ---
+        async function uploadToImgBB(base64Data) {
+            const base64Str = base64Data.split(',')[1]; // ตัดส่วน header data:image/jpeg;base64, ออก
+            const formData = new FormData();
+            formData.append('image', base64Str);
+            
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.success) {
+                    return result.data.url; // ส่งคืน URL ที่อัปโหลดสำเร็จ
+                } else {
+                    throw new Error(result.error.message);
+                }
+            } catch (error) {
+                console.error('ImgBB Upload Error:', error);
+                throw error;
+            }
+        }
+
         // --- VACCINE CALENDAR ---
         class ChickenVaccinationCalendar {
              constructor() {
@@ -1474,7 +1497,7 @@
                 if(!cropperInstance) return;
                 const btn = document.getElementById('confirmCropBtn');
                 btn.disabled = true;
-                btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> กำลังบันทึก...';
+                btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> กำลังอัปโหลด...';
                 
                 // เอารูปที่ตัดแล้วออกมา (เป็น base64)
                 const canvas = cropperInstance.getCroppedCanvas({
@@ -1485,27 +1508,33 @@
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 
                 if (currentEditPhotoInfo) {
-                    // จัดการรูปพ่อแม่พันธุ์
-                    if (currentEditPhotoInfo.type === 'breeder_edit') {
-                        const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
-                        if (breeder && breeder.photos[currentEditPhotoInfo.index]) {
-                             breeder.photos[currentEditPhotoInfo.index].data = dataUrl;
-                             saveData();
-                             renderBreederPhotoGallery(currentEditPhotoInfo.id);
-                             renderBreeders();
-                             showNotification('ปรับและขยับรูปภาพสำเร็จ', 'success');
+                    try {
+                        const imgUrl = await uploadToImgBB(dataUrl); // ส่งขึ้น ImgBB
+                        
+                        // จัดการรูปพ่อแม่พันธุ์
+                        if (currentEditPhotoInfo.type === 'breeder_edit') {
+                            const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
+                            if (breeder && breeder.photos[currentEditPhotoInfo.index]) {
+                                 breeder.photos[currentEditPhotoInfo.index].data = imgUrl;
+                                 saveData();
+                                 renderBreederPhotoGallery(currentEditPhotoInfo.id);
+                                 renderBreeders();
+                                 showNotification('ปรับและอัปโหลดรูปภาพสำเร็จ', 'success');
+                            }
+                        } else if (currentEditPhotoInfo.type === 'breeder_new') {
+                            const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
+                            if (breeder) {
+                                breeder.photos.push({ id: Date.now(), data: imgUrl });
+                                saveData();
+                                renderBreederPhotoGallery(currentEditPhotoInfo.id);
+                                renderBreeders();
+                                showNotification('อัปโหลดและตัดรูปสำเร็จ', 'success');
+                            }
                         }
-                    } else if (currentEditPhotoInfo.type === 'breeder_new') {
-                        const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
-                        if (breeder) {
-                            breeder.photos.push({ id: Date.now(), data: dataUrl });
-                            saveData();
-                            renderBreederPhotoGallery(currentEditPhotoInfo.id);
-                            renderBreeders();
-                            showNotification('อัปโหลดและตัดรูปสำเร็จ', 'success');
-                        }
+                        closeCropperModal();
+                    } catch (error) {
+                        showNotification('อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่', 'error');
                     }
-                    closeCropperModal();
                 }
                 
                 btn.disabled = false;
@@ -1516,20 +1545,25 @@
                 if (!currentEditPhotoInfo) return;
                 const btn = document.getElementById('skipCropBtn');
                 btn.disabled = true;
-                btn.textContent = 'กำลังบันทึก...';
+                btn.textContent = 'กำลังอัปโหลด...';
                 
                 if (currentEditPhotoInfo.type === 'breeder_new') {
-                    // ข้ามการตัดรูป แต่บีบอัดให้เล็กลง
-                    compressImage(currentEditPhotoInfo.file, 1024, 1024, 0.8, (dataUrl) => {
-                        const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
-                        if (breeder) {
-                            breeder.photos.push({ id: Date.now(), data: dataUrl });
-                            saveData();
-                            renderBreederPhotoGallery(currentEditPhotoInfo.id);
-                            renderBreeders();
-                            showNotification('อัปโหลดรูปสำเร็จ', 'success');
+                    // ข้ามการตัดรูป แต่บีบอัดให้เล็กลง และส่งขึ้น ImgBB
+                    compressImage(currentEditPhotoInfo.file, 1024, 1024, 0.8, async (dataUrl) => {
+                        try {
+                            const imgUrl = await uploadToImgBB(dataUrl);
+                            const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
+                            if (breeder) {
+                                breeder.photos.push({ id: Date.now(), data: imgUrl });
+                                saveData();
+                                renderBreederPhotoGallery(currentEditPhotoInfo.id);
+                                renderBreeders();
+                                showNotification('อัปโหลดรูปสำเร็จ', 'success');
+                            }
+                            closeCropperModal();
+                        } catch (error) {
+                            showNotification('อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่', 'error');
                         }
-                        closeCropperModal();
                         btn.disabled = false;
                         btn.textContent = 'ไม่ตัด (ใช้รูปเต็ม)';
                     });
@@ -2753,6 +2787,103 @@
         }
 
         // --- NEWLY ADDED MISSING FUNCTIONS BELOW ---
+        
+        function renderDashboard() {
+            // 1. นำข้อมูลกิจกรรมมารวมกัน
+            let allActivities = [];
+            financeDataStore.forEach(t => allActivities.push({ date: t.date, type: 'finance', data: t }));
+            Object.values(batchesDataStore).forEach(b => {
+                allActivities.push({ date: b.birthDate, type: 'birth', data: b });
+                if (b.vaccinations) {
+                    b.vaccinations.forEach(v => {
+                        if (v.status === 'completed' && v.completedDate) {
+                            allActivities.push({ date: v.completedDate, type: 'vaccine', data: { ...v, coopName: b.name } });
+                        }
+                    });
+                }
+            });
+
+            // เรียงลำดับจากล่าสุดไปเก่าสุด
+            allActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const activitiesContainer = document.getElementById('dashboardRecentActivities');
+            if(!activitiesContainer) return;
+            activitiesContainer.innerHTML = '';
+            const recentActivities = allActivities.slice(0, 5); // เอาแค่ 5 อันล่าสุด
+
+            if (recentActivities.length === 0) {
+                activitiesContainer.innerHTML = '<p class="text-center text-slate-500 py-4 font-medium">ยังไม่มีกิจกรรมล่าสุด</p>';
+            } else {
+                recentActivities.forEach(act => {
+                    let activityHtml = '';
+                    if (act.type === 'finance') {
+                        const isIncome = act.data.type === 'income';
+                        activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl ${isIncome ? 'bg-emerald-50 border border-emerald-100' : 'bg-rose-50 border border-rose-100'}">
+                            <div><p class="font-bold ${isIncome ? 'text-emerald-800' : 'text-rose-800'}">${act.data.note}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                            <span class="${isIncome ? 'text-emerald-600' : 'text-rose-600'} font-bold">${isIncome ? '+' : '-'}฿${act.data.amount.toLocaleString()}</span>
+                        </div>`;
+                    } else if (act.type === 'birth') {
+                        activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-amber-50 border border-amber-100">
+                            <div><p class="font-bold text-amber-800">🐣 บันทึกลูกไก่ ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                            <span class="text-amber-600 font-bold">${act.data.totalChicks} ตัว</span>
+                        </div>`;
+                    } else if (act.type === 'vaccine') {
+                        activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-100">
+                            <div><p class="font-bold text-blue-800">💉 ให้วัคซีน ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${act.data.coopName} - ${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                            <span class="text-blue-600 font-bold">สำเร็จ</span>
+                        </div>`;
+                    }
+                    activitiesContainer.innerHTML += activityHtml;
+                });
+            }
+
+            // 2. การแจ้งเตือนวัคซีน
+            const alertsContainer = document.getElementById('dashboardVaccineAlerts');
+            if(!alertsContainer) return;
+            alertsContainer.innerHTML = '';
+            const allAlerts = [];
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const threeDaysFromNow = new Date(today); threeDaysFromNow.setDate(today.getDate() + 3);
+
+            Object.values(batchesDataStore).forEach(batch => {
+                if (batch.vaccinations) {
+                    batch.vaccinations.forEach(vaccine => {
+                        const vaccineDate = new Date(vaccine.date); vaccineDate.setHours(0, 0, 0, 0);
+                        if (vaccine.status === 'pending') {
+                            if (vaccineDate < today) {
+                                allAlerts.push({ ...vaccine, coopName: batch.name, daysOverdue: Math.ceil((today - vaccineDate) / (1000 * 60 * 60 * 24)), isOverdue: true });
+                            } else if (vaccineDate >= today && vaccineDate <= threeDaysFromNow) {
+                                allAlerts.push({ ...vaccine, coopName: batch.name, daysUntil: Math.ceil((vaccineDate - today) / (1000 * 60 * 60 * 24)), isOverdue: false });
+                            }
+                        }
+                    });
+                }
+            });
+
+            allAlerts.sort((a, b) => {
+                if (a.isOverdue && !b.isOverdue) return -1;
+                if (!a.isOverdue && b.isOverdue) return 1;
+                if (a.isOverdue && b.isOverdue) return b.daysOverdue - a.daysOverdue;
+                return new Date(a.date) - new Date(b.date);
+            });
+
+            if (allAlerts.length === 0) {
+                alertsContainer.innerHTML = '<p class="text-center text-slate-500 py-4 font-medium">ไม่มีการแจ้งเตือนวัคซีน</p>';
+            } else {
+                alertsContainer.innerHTML = allAlerts.map(alert => {
+                    if (alert.isOverdue) {
+                        return `<div class="flex justify-between items-center p-3 rounded-xl bg-rose-50 border-l-4 border-rose-500">
+                            <div><p class="font-bold text-rose-800">💉 ${alert.coopName}: ${alert.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(alert.date).toLocaleDateString('th-TH')}</p></div>
+                            <span class="text-rose-600 font-bold text-right bg-rose-100 px-2 py-1 rounded-lg text-xs">เลยกำหนด ${alert.daysOverdue} วัน</span>
+                        </div>`;
+                    } else {
+                        return `<div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border-l-4 border-blue-500">
+                            <div><p class="font-bold text-blue-800">💉 ${alert.coopName}: ${alert.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(alert.date).toLocaleDateString('th-TH')}</p></div>
+                            <span class="text-blue-600 font-bold text-right bg-blue-100 px-2 py-1 rounded-lg text-xs">${alert.daysUntil === 0 ? 'วันนี้' : `ในอีก ${alert.daysUntil} วัน`}</span>
+                        </div>`;
+                    }
+                }).join('');
+            }
+        }
 
         function editBreeder(btn) {
             const card = btn.closest('[data-id]');
@@ -2933,13 +3064,26 @@
             }
 
             const file = files[0];
-            compressImage(file, 800, 800, 0.8, (dataUrl) => {
-                if(!chick.photos) chick.photos = [];
-                chick.photos.push({ id: Date.now(), data: dataUrl });
-                saveData();
-                renderChickPhotoGallery(chickId);
-                renderChickGallery(currentBatchId);
-                showNotification('อัปโหลดรูปลูกไก่สำเร็จ', 'success');
+            const btn = document.querySelector('button[onclick*="chickPhotoInput"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> กำลังอัปโหลด...';
+
+            compressImage(file, 800, 800, 0.8, async (dataUrl) => {
+                try {
+                    const imgUrl = await uploadToImgBB(dataUrl); // ส่งขึ้น ImgBB
+                    if(!chick.photos) chick.photos = [];
+                    chick.photos.push({ id: Date.now(), data: imgUrl });
+                    saveData();
+                    renderChickPhotoGallery(chickId);
+                    renderChickGallery(currentBatchId);
+                    showNotification('อัปโหลดรูปลูกไก่สำเร็จ', 'success');
+                } catch (error) {
+                    showNotification('อัปโหลดรูปลูกไก่ไม่สำเร็จ กรุณาลองใหม่', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
             });
             
             event.target.value = '';
@@ -2983,6 +3127,26 @@
                 }
             });
         }
+        
+        function updateChickStatus(chickId, newStatus, statusData = {}) {
+            const batch = batchesDataStore[currentBatchId];
+            const chick = batch.chicks.find(c => c.id == chickId);
+            if (!chick) return;
+
+            Object.assign(chick, statusData);
+            chick.status = newStatus;
+
+            if (newStatus !== 'sold') {
+                delete chick.salePrice;
+                delete chick.saleDate;
+                delete chick.buyerName;
+                delete chick.saleNote;
+                delete chick.transactionId;
+            }
+            
+            updateChickVisuals(chickId);
+        }
+
     </script>
 </body>
 </html>
