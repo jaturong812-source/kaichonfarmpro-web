@@ -81,8 +81,9 @@
                 <button type="submit" id="authSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-md transition text-lg mt-2">เข้าสู่ระบบ</button>
             </form>
             
-            <div class="mt-6 pt-6 border-t border-slate-100">
+            <div class="mt-6 pt-6 border-t border-slate-100 flex flex-col gap-3">
                 <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-emerald-600 font-medium hover:text-emerald-700 transition">ไม่มีบัญชี? สมัครสมาชิกใหม่ฟรี</button>
+                <button onclick="skipLogin()" class="text-slate-400 text-sm hover:text-slate-600 transition underline">ข้ามการเข้าสู่ระบบ (ใช้งานแบบออฟไลน์)</button>
             </div>
         </div>
     </div>
@@ -979,6 +980,7 @@
         let isLoginMode = true;
         let currentUser = null;
         let isCloudDataLoaded = false; // สำคัญมาก: ป้องกันการเซฟทับข้อมูลคลาวด์ตอนโหลดเริ่มต้น
+        let isGuestMode = false; // โหมดใช้งานแบบออฟไลน์ไม่ล็อกอิน
         
         // --- CROPPER VARIABLES ---
         let imageCropQueue = [];
@@ -1548,6 +1550,7 @@
         auth.onAuthStateChanged(user => {
             const authOverlay = document.getElementById('authOverlay');
             if (user) {
+                isGuestMode = false;
                 currentUser = user;
                 authOverlay.classList.add('hidden');
                 document.getElementById('userIdDisplay').textContent = user.email;
@@ -1560,17 +1563,43 @@
             } else {
                 currentUser = null;
                 isCloudDataLoaded = false;
-                authOverlay.classList.remove('hidden');
+                
+                if (!isGuestMode) {
+                    authOverlay.classList.remove('hidden');
+                    // เคลียร์ข้อมูลเมื่อออกจากระบบ
+                    batchesDataStore = {};
+                    breedersDataStore = [];
+                    financeDataStore = [];
+                    renderAll();
+                }
+                
                 document.getElementById('authSubmitBtn').disabled = false;
                 document.getElementById('authSubmitBtn').textContent = isLoginMode ? 'เข้าสู่ระบบ' : 'สมัครสมาชิกใหม่';
-                
-                // เคลียร์ข้อมูลเมื่อออกจากระบบ
-                batchesDataStore = {};
-                breedersDataStore = [];
-                financeDataStore = [];
-                renderAll();
             }
         });
+
+        function skipLogin() {
+            isGuestMode = true;
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('userIdDisplay').textContent = 'ออฟไลน์ (Guest)';
+            
+            // ดึงข้อมูลเก่าในเครื่องมาแสดง
+            const str = localStorage.getItem('farmData');
+            if (str) {
+                try {
+                    const data = JSON.parse(str);
+                    if(data) {
+                        batchesDataStore = data.batches || {}; 
+                        breedersDataStore = data.breeders || []; 
+                        financeDataStore = data.finance || [];
+                    }
+                } catch(e) { console.error(e); }
+            }
+            
+            isCloudDataLoaded = true; // ปลดล็อกให้อนุญาตบันทึกลง LocalStorage ได้
+            renderAll();
+            showNotification('เข้าสู่โหมดออฟไลน์ ข้อมูลจะถูกบันทึกแค่ในอุปกรณ์นี้', 'warning');
+        }
 
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
@@ -1635,6 +1664,13 @@
         }
 
         function logout() {
+            if (isGuestMode) {
+                isGuestMode = false;
+                document.getElementById('authOverlay').classList.remove('hidden');
+                batchesDataStore = {}; breedersDataStore = []; financeDataStore = [];
+                renderAll();
+                return;
+            }
             showConfirmation('ออกจากระบบ', 'คุณต้องการออกจากระบบหรือไม่? (ข้อมูลจะยังคงอยู่บน Cloud ปลอดภัย 100%)', () => {
                 auth.signOut();
             });
@@ -1933,7 +1969,7 @@
                     const status = document.getElementById('chickStatus').value;
                     const code = document.getElementById('chickCode').value;
                     const statusData = { gender: document.getElementById('chickGender').value, code: code };
-                    let notificationMessage = `อัปเดตข้อมูลสำเร็จ`;
+                    let notificationMessage = `บันทึกข้อมูลสำเร็จ`;
 
                     if (originalStatus === 'sold' && status !== 'sold') {
                         const transactionIndex = financeDataStore.findIndex(t => t.id === chick.transactionId);
@@ -1973,7 +2009,8 @@
                     }
                     
                     saveData();
-                    closeChickUpdateModal(); showNotification(notificationMessage, 'success');
+                    closeChickUpdateModal(); 
+                    showNotification(notificationMessage, 'success');
                 });
             }
         }
@@ -2166,21 +2203,27 @@
             if (!chick) return;
 
             const statusBadge = chickElement.querySelector('.status-badge');
-            statusBadge.className = 'inline-block px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold status-badge shadow-sm border';
+            statusBadge.className = 'inline-block px-4 py-1 rounded-full text-[10px] sm:text-xs font-bold status-badge shadow-sm transition-colors';
             
             switch (chick.status) {
-                case 'alive': statusBadge.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200'); statusBadge.textContent = 'มีชีวิต'; break;
-                case 'sold': statusBadge.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-200'); statusBadge.textContent = 'ขายแล้ว'; break;
-                case 'dead': statusBadge.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-200'); statusBadge.textContent = 'ตาย'; break;
+                case 'alive': statusBadge.classList.add('bg-blue-100', 'text-blue-700'); statusBadge.textContent = 'มีชีวิต'; break;
+                case 'sold': statusBadge.classList.add('bg-emerald-100', 'text-emerald-700'); statusBadge.textContent = 'ขายแล้ว'; break;
+                case 'dead': statusBadge.classList.add('bg-rose-100', 'text-rose-700'); statusBadge.textContent = 'ตาย'; break;
             }
 
-            const iconContainer = chickElement.querySelector('.aspect-square');
-            iconContainer.className = `aspect-square bg-slate-100 rounded-xl flex items-center justify-center cursor-pointer hover:ring-2 ring-emerald-500 transition-all overflow-hidden border border-slate-200 ${chick.status === 'dead' ? 'opacity-50 grayscale' : ''}`;
+            const iconContainer = chickElement.querySelector('.image-container');
+            iconContainer.className = `image-container w-16 h-16 sm:w-20 sm:h-20 mb-3 flex items-center justify-center rounded-xl overflow-hidden transition-all ${chick.status === 'dead' ? 'opacity-50 grayscale' : ''}`;
             
             if (chick.photos && chick.photos.length > 0) {
                 iconContainer.innerHTML = `<img src="${chick.photos[0].data}" class="w-full h-full object-cover">`;
             } else {
-                iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">${chick.status === 'sold' ? '💰' : (chick.status === 'dead' ? '💀' : '🐣')}</span>`;
+                if (chick.status === 'sold') {
+                    iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">💰</span>`;
+                } else if (chick.status === 'dead') {
+                    iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">💀</span>`;
+                } else {
+                    iconContainer.innerHTML = `<span class="text-4xl sm:text-5xl">🐣</span>`;
+                }
             }
         }
 
@@ -2192,12 +2235,12 @@
             if (batch && batch.chicks) {
                 batch.chicks.forEach(chick => {
                     const el = document.createElement('div');
-                    el.className = 'relative group chick-item text-center';
+                    el.className = 'relative group bg-slate-50 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer border-2 border-transparent hover:border-emerald-500 transition-all card-shadow';
                     el.dataset.chickId = chick.id;
                     el.onclick = () => openChickUpdateModal(el);
                     el.innerHTML = `
-                        <div class="aspect-square mb-2"></div>
-                        <span class="text-sm font-bold text-slate-700 block mb-1">${chick.code || `#${chick.id}`}</span>
+                        <div class="image-container w-16 h-16 sm:w-20 sm:h-20 mb-3 flex items-center justify-center rounded-xl overflow-hidden transition-all"></div>
+                        <span class="text-sm font-bold text-slate-800 block mb-2">${chick.code || `#${chick.id}`}</span>
                         <div class="status-badge"></div>
                     `;
                     gallery.appendChild(el);
@@ -2229,8 +2272,6 @@
         
         function showAddBreederModal() { document.getElementById('addBreederModal').classList.remove('hidden'); }
         function closeAddBreederModal() { document.getElementById('addBreederModal').classList.add('hidden'); }
-        function showEditBreederModal() { document.getElementById('editBreederModal').classList.remove('hidden'); }
-        function closeEditBreederModal() { document.getElementById('editBreederModal').classList.add('hidden'); }
         function showAddChickBatchModal() { updateBreederSelects(); document.getElementById('addChickBatchModal').classList.remove('hidden'); }
         function closeAddChickBatchModal() { document.getElementById('addChickBatchModal').classList.add('hidden'); }
         function closeEditBatchModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
@@ -2709,6 +2750,238 @@
                 }
             };
             r.readAsText(f);
+        }
+
+        // --- NEWLY ADDED MISSING FUNCTIONS BELOW ---
+
+        function editBreeder(btn) {
+            const card = btn.closest('[data-id]');
+            if (!card) return;
+            const id = card.dataset.id;
+            const breeder = breedersDataStore.find(b => b.id === id);
+            if (!breeder) return;
+
+            document.getElementById('editBreederId').value = id;
+            document.getElementById('editBreederName').value = breeder.name;
+            document.getElementById('editBreederCode').value = breeder.code || '';
+            document.getElementById('editBreederBreed').value = breeder.breed || '';
+            document.getElementById('editBreederSource').value = breeder.source || '';
+            document.getElementById('editBreederStatus').value = breeder.status || 'alive';
+            document.getElementById('editBreederSalePrice').value = breeder.salePrice || '';
+            document.getElementById('editBreederSaleDate').value = breeder.saleDate || new Date().toISOString().split('T')[0];
+            document.getElementById('editBreederDeathDate').value = breeder.deathDate || new Date().toISOString().split('T')[0];
+
+            toggleBreederStatusFields();
+            document.getElementById('editBreederModal').classList.remove('hidden');
+        }
+
+        function deleteBreeder(id) {
+            showConfirmation('ยืนยันการลบ', 'ต้องการลบไก่พันธุ์นี้หรือไม่? (ข้อมูลบัญชีที่เกี่ยวข้องจะยังคงอยู่)', () => {
+                const index = breedersDataStore.findIndex(b => b.id === id);
+                if (index > -1) {
+                    breedersDataStore.splice(index, 1);
+                    saveData();
+                    renderBreeders();
+                    updateGlobalStatistics();
+                    showNotification('ลบข้อมูลไก่พันธุ์สำเร็จ', 'success');
+                }
+            });
+        }
+
+        function openChickUpdateModal(el) {
+            const chickId = el.dataset.chickId;
+            const batch = batchesDataStore[currentBatchId];
+            const chick = batch.chicks.find(c => c.id == chickId);
+            if (!chick) return;
+
+            document.getElementById('updateChickId').value = chickId;
+            document.getElementById('chickCode').value = chick.code || '';
+            document.getElementById('chickStatus').value = chick.status || 'alive';
+            document.getElementById('chickGender').value = chick.gender || 'unknown';
+            
+            document.getElementById('salePrice').value = chick.salePrice || '';
+            document.getElementById('saleDate').value = chick.saleDate || new Date().toISOString().split('T')[0];
+            document.getElementById('buyerName').value = chick.buyerName || '';
+            
+            document.getElementById('deathDate').value = chick.deathDate || new Date().toISOString().split('T')[0];
+            document.getElementById('deathCause').value = chick.deathCause || '';
+
+            toggleSaleFields();
+            renderChickPhotoGallery(chickId);
+            document.getElementById('chickUpdateModal').classList.remove('hidden');
+        }
+
+        function closeChickUpdateModal() {
+            document.getElementById('chickUpdateModal').classList.add('hidden');
+            document.getElementById('chickUpdateForm').reset();
+        }
+
+        function toggleSaleFields() {
+            const status = document.getElementById('chickStatus').value;
+            document.getElementById('saleFields').classList.toggle('hidden', status !== 'sold');
+            document.getElementById('deathFields').classList.toggle('hidden', status !== 'dead');
+        }
+
+        function deleteChick() {
+            showConfirmation('ลบลูกไก่', 'คุณต้องการลบลูกไก่นี้ทิ้งหรือไม่?', () => {
+                const chickId = document.getElementById('updateChickId').value;
+                const batch = batchesDataStore[currentBatchId];
+                const index = batch.chicks.findIndex(c => c.id == chickId);
+                if (index > -1) {
+                    batch.chicks.splice(index, 1);
+                    batch.totalChicks = Math.max(0, batch.totalChicks - 1);
+                    saveData();
+                    renderChickGallery(currentBatchId);
+                    updateBatchStatistics(currentBatchId);
+                    renderAll(); 
+                    closeChickUpdateModal();
+                    showNotification('ลบลูกไก่สำเร็จ', 'success');
+                }
+            });
+        }
+
+        function addTransactionFromChickSale(saleData) {
+            const transactionId = `trans-${Date.now()}`;
+            financeDataStore.push({
+                id: transactionId,
+                type: 'income',
+                category: 'chicken-sale',
+                amount: parseFloat(saleData.price),
+                note: saleData.note,
+                date: saleData.date
+            });
+            return transactionId;
+        }
+
+        function deleteTransaction(id) {
+            showConfirmation('ลบรายการ', 'ต้องการลบรายการบัญชีนี้ใช่หรือไม่?', () => {
+                const index = financeDataStore.findIndex(t => t.id === id);
+                if (index > -1) {
+                    financeDataStore.splice(index, 1);
+                    saveData();
+                    filterFinance(currentFinancePeriod);
+                    updateGlobalStatistics();
+                    showNotification('ลบรายการสำเร็จ', 'success');
+                }
+            });
+        }
+
+        function renderFinanceChart(data, period) {
+            const canvas = document.getElementById('financeChart');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            if (financeChartInstance) {
+                financeChartInstance.destroy();
+            }
+
+            const groupedData = {};
+            data.forEach(t => {
+                const d = new Date(t.date);
+                let k = '';
+                if (period === 'monthly') k = d.getDate().toString();
+                else if (period === 'yearly') k = d.toLocaleDateString('th-TH', { month: 'short' });
+                else k = d.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' });
+                
+                if (!groupedData[k]) groupedData[k] = { inc: 0, exp: 0, d: d.getTime() };
+                if (t.type === 'income') groupedData[k].inc += t.amount;
+                else groupedData[k].exp += t.amount;
+            });
+
+            const sortedKeys = Object.keys(groupedData).sort((a, b) => groupedData[a].d - groupedData[b].d);
+            const labels = [];
+            const incomes = [];
+            const expenses = [];
+
+            sortedKeys.forEach(k => {
+                labels.push(k);
+                incomes.push(groupedData[k].inc);
+                expenses.push(groupedData[k].exp);
+            });
+
+            financeChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'รายรับ', data: incomes, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.3 },
+                        { label: 'รายจ่าย', data: expenses, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function queueChickPhotoUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+            
+            const chickId = document.getElementById('updateChickId').value;
+            const batch = batchesDataStore[currentBatchId];
+            const chick = batch.chicks.find(c => c.id == chickId);
+            if (!chick) return;
+
+            if ((chick.photos?.length || 0) >= 5) {
+                showNotification('อัปโหลดได้สูงสุด 5 รูปต่อตัว', 'error');
+                return;
+            }
+
+            const file = files[0];
+            compressImage(file, 800, 800, 0.8, (dataUrl) => {
+                if(!chick.photos) chick.photos = [];
+                chick.photos.push({ id: Date.now(), data: dataUrl });
+                saveData();
+                renderChickPhotoGallery(chickId);
+                renderChickGallery(currentBatchId);
+                showNotification('อัปโหลดรูปลูกไก่สำเร็จ', 'success');
+            });
+            
+            event.target.value = '';
+        }
+
+        function renderChickPhotoGallery(chickId) {
+            const batch = batchesDataStore[currentBatchId];
+            const chick = batch.chicks.find(c => c.id == chickId);
+            const gallery = document.getElementById('chickPhotoGallery');
+            const countSpan = document.getElementById('photoCount');
+            
+            if (!chick) return;
+            if (!chick.photos) chick.photos = [];
+            
+            gallery.innerHTML = '';
+            countSpan.textContent = chick.photos.length;
+            
+            chick.photos.forEach((photo, index) => {
+                const div = document.createElement('div');
+                div.className = 'relative group aspect-square rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100';
+                div.innerHTML = `
+                    <img src="${photo.data || photo.url}" class="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300" onclick="openLightbox('${photo.data || photo.url}')">
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent p-2 pt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex justify-center gap-2 z-20 translate-y-2 group-hover:translate-y-0">
+                        <button type="button" onclick="deleteChickPhoto('${chickId}', ${index})" class="bg-rose-500/80 hover:bg-rose-600 text-white p-2 rounded-lg backdrop-blur-sm transition-colors" title="ลบรูปภาพ"><i class="ph ph-trash text-base"></i></button>
+                    </div>
+                `;
+                gallery.appendChild(div);
+            });
+        }
+
+        function deleteChickPhoto(chickId, index) {
+            showConfirmation('ลบรูปภาพ', 'คุณต้องการลบรูปภาพนี้ใช่หรือไม่?', () => {
+                const batch = batchesDataStore[currentBatchId];
+                const chick = batch.chicks.find(c => c.id == chickId);
+                if (chick && chick.photos) {
+                    chick.photos.splice(index, 1);
+                    saveData();
+                    renderChickPhotoGallery(chickId);
+                    renderChickGallery(currentBatchId);
+                    showNotification('ลบรูปภาพสำเร็จ', 'success');
+                }
+            });
         }
     </script>
 </body>
