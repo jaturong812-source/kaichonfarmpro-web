@@ -2306,6 +2306,7 @@
         
         function showAddBreederModal() { document.getElementById('addBreederModal').classList.remove('hidden'); }
         function closeAddBreederModal() { document.getElementById('addBreederModal').classList.add('hidden'); }
+        function closeEditBreederModal() { document.getElementById('editBreederModal').classList.add('hidden'); }
         function showAddChickBatchModal() { updateBreederSelects(); document.getElementById('addChickBatchModal').classList.remove('hidden'); }
         function closeAddChickBatchModal() { document.getElementById('addChickBatchModal').classList.add('hidden'); }
         function closeEditBatchModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
