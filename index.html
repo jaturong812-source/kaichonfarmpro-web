@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ไก่ชนฟาร์มโปร - Local & ImgBB Storage</title>
+    <title>ไก่ชนฟาร์มโปร - Local & ImgBB Storage & AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -64,6 +64,16 @@
         
         /* Cropper adjustments */
         #cropImage { display: block; max-width: 100%; }
+        
+        /* Form Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 10px; }
+
+        /* AI Text Formatting */
+        .ai-content p { margin-bottom: 0.75rem; }
+        .ai-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .ai-content li { margin-bottom: 0.25rem; }
+        .ai-content strong { color: #1e293b; font-weight: 600; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden bg-slate-50">
@@ -134,6 +144,13 @@
             
             <button onclick="showSection('vaccineCalendarSection', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-600 hover:bg-slate-50 border-transparent border-r-4 hover:text-slate-900 transition-colors">
                 <i class="ph ph-syringe text-xl"></i> โปรแกรมวัคซีน
+            </button>
+
+            <!-- เพิ่มเมนู AI สัตวแพทย์ -->
+            <p class="px-3 text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2 mt-6 flex items-center gap-1"><i class="ph ph-sparkle text-purple-500"></i> ฟีเจอร์อัจฉริยะ</p>
+            
+            <button onclick="showSection('aiAssistantSection', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-purple-700 bg-purple-50 border-transparent border-r-4 hover:bg-purple-100 transition-colors font-medium">
+                <i class="ph ph-magic-wand text-xl"></i> ผู้ช่วยสัตวแพทย์ AI
             </button>
 
             <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">การเงินและรายงาน</p>
@@ -267,6 +284,75 @@
                             <div class="p-5 bg-indigo-50 rounded-xl border border-indigo-100 text-center">
                                 <p class="text-sm text-indigo-600 font-medium mb-1">อัตราการรอด</p>
                                 <p class="text-3xl font-bold text-indigo-700" id="dashSurvivalRate">0%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI ASSISTANT SECTION -->
+                <div id="aiAssistantSection" class="section hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500 flex items-center gap-2">
+                                <i class="ph ph-magic-wand text-purple-600"></i> ผู้ช่วยสัตวแพทย์ AI
+                            </h2>
+                            <p class="text-slate-500 text-sm mt-1">วิเคราะห์อาการป่วยของไก่และแนะนำวิธีรักษาเบื้องต้นด้วยพลังของ Gemini AI</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Input Area -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-white rounded-2xl p-6 card-shadow border-t-4 border-purple-500">
+                                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <i class="ph ph-stethoscope text-purple-500 text-xl"></i> อธิบายอาการของไก่
+                                </h3>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">อาการที่พบ (อธิบายให้ละเอียดที่สุด)</label>
+                                    <textarea id="aiSymptomsInput" rows="5" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition custom-scrollbar" placeholder="เช่น ไก่ซึม ไม่กินอาหาร ขี้ขาวปนเขียว ขนพอง หายใจเสียงดัง..."></textarea>
+                                </div>
+                                <div class="mb-5 flex flex-wrap gap-2">
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ไก่ซึม '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ไก่ซึม</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ขี้ขาว '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ขี้ขาว</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ขี้เขียว '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ขี้เขียว</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'หน้าบวม '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">หน้าบวม</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'หายใจดัง '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">หายใจดัง</button>
+                                </div>
+                                <button id="aiAnalyzeBtn" onclick="analyzeSymptomsWithAI()" class="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                                    ✨ วิเคราะห์อาการด้วย AI
+                                </button>
+                            </div>
+                            
+                            <div class="bg-amber-50 rounded-2xl p-5 border border-amber-100 text-sm text-amber-800">
+                                <p class="font-bold flex items-center gap-1 mb-1"><i class="ph ph-warning-circle text-lg"></i> ข้อควรระวัง</p>
+                                <p>ผลการวิเคราะห์จาก AI เป็นเพียงการประเมินเบื้องต้นจากอาการที่ระบุเท่านั้น ไม่สามารถใช้ทดแทนการวินิจฉัยจากสัตวแพทย์ผู้เชี่ยวชาญได้</p>
+                            </div>
+                        </div>
+
+                        <!-- Output Area -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-2xl p-6 card-shadow h-full min-h-[400px] flex flex-col relative">
+                                <h3 class="font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="ph ph-clipboard-text text-blue-500 text-xl"></i> ผลการวิเคราะห์และคำแนะนำ
+                                </h3>
+                                
+                                <!-- Loading State -->
+                                <div id="aiLoadingState" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10">
+                                    <div class="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+                                    <p class="text-purple-700 font-bold animate-pulse">กำลังวิเคราะห์ข้อมูลด้วย Gemini AI...</p>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div id="aiEmptyState" class="flex-1 flex flex-col items-center justify-center text-slate-400">
+                                    <i class="ph ph-robot text-6xl mb-3 text-slate-200"></i>
+                                    <p>กรอกอาการของไก่ที่ช่องด้านซ้ายมือ</p>
+                                    <p class="text-sm">แล้วคลิก "วิเคราะห์อาการด้วย AI"</p>
+                                </div>
+
+                                <!-- Result Output -->
+                                <div id="aiResultOutput" class="hidden flex-1 overflow-y-auto custom-scrollbar pr-2 text-slate-700 ai-content text-sm sm:text-base leading-relaxed">
+                                    <!-- AI text will be injected here -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -611,6 +697,26 @@
                             <h2 class="text-2xl font-bold text-slate-800">รายงานสถิติเชิงลึก</h2>
                             <p class="text-slate-500 text-sm mt-1">วิเคราะห์ประสิทธิภาพการเลี้ยงและผลประกอบการฟาร์ม</p>
                         </div>
+                        <button onclick="generateAiReport()" class="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors w-full sm:w-auto justify-center">
+                            ✨ ให้ AI สรุปรายงานฟาร์ม
+                        </button>
+                    </div>
+                    
+                    <!-- AI Report Output Area -->
+                    <div id="aiReportContainer" class="hidden bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 mb-6 card-shadow border border-purple-100 relative">
+                        <button onclick="document.getElementById('aiReportContainer').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-xl"></i></button>
+                        <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center gap-2">
+                            <i class="ph ph-magic-wand text-xl"></i> บทวิเคราะห์และคำแนะนำจาก AI
+                        </h3>
+                        
+                        <div id="aiReportLoadingState" class="flex flex-col items-center justify-center py-6">
+                            <div class="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-3"></div>
+                            <p class="text-purple-700 font-medium animate-pulse">AI กำลังวิเคราะห์ข้อมูลทั้งหมดของฟาร์ม...</p>
+                        </div>
+                        
+                        <div id="aiReportResult" class="hidden ai-content text-slate-700 text-sm sm:text-base leading-relaxed">
+                            <!-- AI Report Text Injected Here -->
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -785,47 +891,47 @@
 
     <!-- Edit Breeder Modal -->
     <div id="editBreederModal" class="fixed inset-0 bg-slate-900/50 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex justify-between items-center p-5 border-b border-slate-100 shrink-0 bg-white">
                 <h3 class="text-lg font-bold text-slate-800">แก้ไขข้อมูลไก่พันธุ์</h3>
-                <button onclick="closeEditBreederModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition"><i class="ph ph-x text-xl"></i></button>
+                <button type="button" onclick="closeEditBreederModal()" class="text-slate-400 hover:text-slate-700 bg-slate-50 p-1.5 rounded-xl transition-colors"><i class="ph ph-x text-xl"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto">
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 <form id="editBreederForm" class="space-y-4">
                     <input type="hidden" id="editBreederId">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ</label><input type="text" id="editBreederName" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" required></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อ</label><input type="text" id="editBreederName" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition" required></div>
                     
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
                         <label class="block text-sm font-semibold text-slate-700 mb-2">สถานะปัจจุบัน</label>
-                        <select id="editBreederStatus" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-emerald-500 outline-none" onchange="toggleBreederStatusFields()">
+                        <select id="editBreederStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium transition" onchange="toggleBreederStatusFields()">
                             <option value="alive">🟢 มีชีวิต</option>
                             <option value="sold">💰 ขายแล้ว</option>
                             <option value="dead">💀 ตาย</option>
                         </select>
                     </div>
 
-                    <div id="editBreederSaleFields" class="hidden p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-3">
+                    <div id="editBreederSaleFields" class="hidden p-5 bg-emerald-50 rounded-2xl border border-emerald-100 space-y-3">
                         <h4 class="font-bold text-emerald-800 text-sm">บันทึกการขาย</h4>
-                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">ราคาขาย (บาท)</label><input type="number" id="editBreederSalePrice" class="w-full border border-emerald-200 rounded-lg px-3 py-2 bg-white outline-none focus:border-emerald-500"></div>
-                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">วันที่ขาย</label><input type="date" id="editBreederSaleDate" class="w-full border border-emerald-200 rounded-lg px-3 py-2 bg-white outline-none focus:border-emerald-500"></div>
+                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">ราคาขาย (บาท)</label><input type="number" id="editBreederSalePrice" class="w-full border border-emerald-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">วันที่ขาย</label><input type="date" id="editBreederSaleDate" class="w-full border border-emerald-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-emerald-500"></div>
                     </div>
 
-                    <div id="editBreederDeathFields" class="hidden p-4 bg-rose-50 rounded-xl border border-rose-100 space-y-3">
+                    <div id="editBreederDeathFields" class="hidden p-5 bg-rose-50 rounded-2xl border border-rose-100 space-y-3">
                         <h4 class="font-bold text-rose-800 text-sm">บันทึกการตาย</h4>
-                        <div><label class="block text-xs font-semibold text-rose-700 mb-1">วันที่ตาย</label><input type="date" id="editBreederDeathDate" class="w-full border border-rose-200 rounded-lg px-3 py-2 bg-white outline-none focus:border-rose-500"></div>
+                        <div><label class="block text-xs font-semibold text-rose-700 mb-1">วันที่ตาย</label><input type="date" id="editBreederDeathDate" class="w-full border border-rose-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-rose-500"></div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัส</label><input type="text" id="editBreederCode" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์</label><input type="text" id="editBreederBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
+                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัส</label><input type="text" id="editBreederCode" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
+                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์</label><input type="text" id="editBreederBreed" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                     </div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ที่มา</label><input type="text" id="editBreederSource" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
-                    
-                    <div class="flex justify-end gap-3 pt-4 mt-6">
-                        <button type="button" onclick="closeEditBreederModal()" class="px-5 py-2.5 rounded-xl font-medium text-slate-600 hover:bg-slate-100 transition">ยกเลิก</button>
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium transition shadow-sm">บันทึกการแก้ไข</button>
-                    </div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">ที่มา</label><input type="text" id="editBreederSource" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                 </form>
+            </div>
+            <!-- Sticky Footer -->
+            <div class="p-5 border-t border-slate-100 shrink-0 bg-white flex justify-end gap-4 items-center">
+                <button type="button" onclick="closeEditBreederModal()" class="font-medium text-slate-500 hover:text-slate-700 px-4">ยกเลิก</button>
+                <button type="submit" form="editBreederForm" class="bg-[#059669] hover:bg-[#047857] text-white px-6 py-3 rounded-2xl font-bold transition shadow-sm">บันทึกการแก้ไข</button>
             </div>
         </div>
     </div>
@@ -863,7 +969,7 @@
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
             <div class="flex justify-between items-center p-5 border-b border-slate-100">
                 <h3 class="text-lg font-bold text-slate-800">แก้ไขข้อมูลคอก</h3>
-                <button onclick="closeEditBatchModal()" class="text-slate-400 hover:text-slate-700"><i class="ph ph-x text-xl"></i></button>
+                <button type="button" onclick="closeEditBatchModal()" class="text-slate-400 hover:text-slate-700"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div class="p-6">
                 <form id="editBatchForm" class="space-y-4">
@@ -885,7 +991,49 @@
     </div>
 
     <!-- Update Chick Modal -->
-    <div id="chickUpdateModal" class="fixed inset-0 bg-slate-900/50 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm"><div class="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto flex flex-col"><div class="flex justify-between items-center p-5 border-b border-slate-100 shrink-0"><h3 class="text-lg font-bold text-slate-800">อัปเดตข้อมูลไก่รายตัว</h3><button onclick="closeChickUpdateModal()" class="text-slate-400 hover:text-slate-700"><i class="ph ph-x text-xl"></i></button></div><div class="p-6 overflow-y-auto"><form id="chickUpdateForm" class="space-y-4"><input type="hidden" id="updateChickId" value=""><div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสไก่/ชื่อเรียก (ไม่บังคับ)</label><input type="text" id="chickCode" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="เช่น C001"></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select id="chickStatus" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-emerald-500 font-medium" onchange="toggleSaleFields()"><option value="alive">🟢 มีชีวิต</option><option value="sold">💰 ขายแล้ว</option><option value="dead">💀 ตาย</option></select></div><div><label class="block text-sm font-semibold text-slate-700 mb-1">เพศ</label><select id="chickGender" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus:ring-2 focus:ring-emerald-500"><option value="unknown">ไม่ระบุ</option><option value="male">ตัวผู้</option><option value="female">ตัวเมีย</option></select></div></div><div class="p-4 bg-slate-50 rounded-xl border border-slate-200"><h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="ph ph-image text-emerald-600"></i> จัดการรูปภาพ</h4><div class="mb-4"><input type="file" id="chickPhotoInput" accept="image/*" multiple class="hidden" onchange="queueChickPhotoUpload(event)"><button type="button" onclick="document.getElementById('chickPhotoInput').click()" class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-2.5 px-4 rounded-xl font-medium transition flex items-center justify-center gap-2"><i class="ph ph-upload-simple"></i> อัปโหลดรูปภาพ (สูงสุด 5 รูป)</button></div><div id="chickPhotoGallery" class="grid grid-cols-2 gap-3"></div><div class="mt-3 text-center text-sm text-slate-500"><span id="photoCount" class="font-bold text-emerald-600">0</span> / 5 รูป</div></div><div id="saleFields" class="hidden space-y-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl"><h4 class="font-bold text-emerald-800 text-sm">ข้อมูลการขาย</h4><div><label class="block text-xs font-semibold text-emerald-700 mb-1">ราคาขาย (บาท)</label><input type="number" id="salePrice" class="w-full border border-emerald-200 rounded-lg px-3 py-2 bg-white" placeholder="0"></div><div><label class="block text-xs font-semibold text-emerald-700 mb-1">วันที่ขาย</label><input type="date" id="saleDate" class="w-full border border-emerald-200 rounded-lg px-3 py-2 bg-white"></div><div><label class="block text-xs font-semibold text-emerald-700 mb-1">ชื่อผู้ซื้อ (ไม่บังคับ)</label><input type="text" id="buyerName" class="w-full border border-emerald-200 rounded-lg px-3 py-2 bg-white"></div></div><div id="deathFields" class="hidden space-y-3 p-4 bg-rose-50 border border-rose-100 rounded-xl"><h4 class="font-bold text-rose-800 text-sm">ข้อมูลการตาย</h4><div><label class="block text-xs font-semibold text-rose-700 mb-1">วันที่ตาย</label><input type="date" id="deathDate" class="w-full border border-rose-200 rounded-lg px-3 py-2 bg-white"></div><div><label class="block text-xs font-semibold text-rose-700 mb-1">สาเหตุ</label><select id="deathCause" class="w-full border border-rose-200 rounded-lg px-3 py-2 bg-white"><option value="">เลือกสาเหตุ</option><option value="disease">เจ็บป่วย</option><option value="accident">อุบัติเหตุ</option><option value="weak">อ่อนแอ</option><option value="unknown">ไม่ทราบสาเหตุ</option></select></div></div><div class="flex gap-3 pt-4 mt-4"><button type="button" onclick="deleteChick()" class="flex-1 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 py-2.5 rounded-xl font-medium transition">ลบไก่ทิ้ง</button><button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-medium shadow-sm transition">บันทึกข้อมูล</button></div></form></div></div></div>
+    <div id="chickUpdateModal" class="fixed inset-0 bg-slate-900/50 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex justify-between items-center p-5 border-b border-slate-100 shrink-0 bg-white">
+                <h3 class="text-lg font-bold text-slate-800">อัปเดตข้อมูลไก่รายตัว</h3>
+                <button type="button" onclick="closeChickUpdateModal()" class="text-slate-400 hover:text-slate-700 bg-slate-50 p-1.5 rounded-xl transition-colors"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                <form id="chickUpdateForm" class="space-y-4">
+                    <input type="hidden" id="updateChickId" value="">
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสไก่/ชื่อเรียก (ไม่บังคับ)</label><input type="text" id="chickCode" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="เช่น C001"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select id="chickStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 font-medium outline-none transition" onchange="toggleSaleFields()"><option value="alive">🟢 มีชีวิต</option><option value="sold">💰 ขายแล้ว</option><option value="dead">💀 ตาย</option></select></div>
+                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">เพศ</label><select id="chickGender" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"><option value="unknown">ไม่ระบุ</option><option value="male">ตัวผู้</option><option value="female">ตัวเมีย</option></select></div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="ph ph-image text-emerald-600"></i> จัดการรูปภาพ</h4>
+                        <div class="mb-4">
+                            <input type="file" id="chickPhotoInput" accept="image/*" multiple class="hidden" onchange="queueChickPhotoUpload(event)">
+                            <button type="button" onclick="document.getElementById('chickPhotoInput').click()" class="w-full bg-white border border-slate-300 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 py-3 px-4 rounded-xl font-medium transition flex items-center justify-center gap-2"><i class="ph ph-upload-simple"></i> อัปโหลดรูปภาพ (สูงสุด 5 รูป)</button>
+                        </div>
+                        <div id="chickPhotoGallery" class="grid grid-cols-2 gap-3"></div>
+                        <div class="mt-3 text-center text-sm text-slate-500"><span id="photoCount" class="font-bold text-emerald-600">0</span> / 5 รูป</div>
+                    </div>
+                    <div id="saleFields" class="hidden space-y-3 p-5 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                        <h4 class="font-bold text-emerald-800 text-sm">ข้อมูลการขาย</h4>
+                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">ราคาขาย (บาท)</label><input type="number" id="salePrice" class="w-full border border-emerald-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-emerald-500" placeholder="0"></div>
+                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">วันที่ขาย</label><input type="date" id="saleDate" class="w-full border border-emerald-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                        <div><label class="block text-xs font-semibold text-emerald-700 mb-1">ชื่อผู้ซื้อ (ไม่บังคับ)</label><input type="text" id="buyerName" class="w-full border border-emerald-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-emerald-500"></div>
+                    </div>
+                    <div id="deathFields" class="hidden space-y-3 p-5 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <h4 class="font-bold text-rose-800 text-sm">ข้อมูลการตาย</h4>
+                        <div><label class="block text-xs font-semibold text-rose-700 mb-1">วันที่ตาย</label><input type="date" id="deathDate" class="w-full border border-rose-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-rose-500"></div>
+                        <div><label class="block text-xs font-semibold text-rose-700 mb-1">สาเหตุ</label><select id="deathCause" class="w-full border border-rose-200 rounded-xl px-4 py-2.5 bg-white outline-none focus:ring-2 focus:ring-rose-500"><option value="">เลือกสาเหตุ</option><option value="disease">เจ็บป่วย</option><option value="accident">อุบัติเหตุ</option><option value="weak">อ่อนแอ</option><option value="unknown">ไม่ทราบสาเหตุ</option></select></div>
+                    </div>
+                </form>
+            </div>
+            <!-- Sticky Footer for Actions -->
+            <div class="p-5 border-t border-slate-100 shrink-0 bg-white flex gap-4">
+                <button type="button" onclick="deleteChick()" class="flex-1 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 py-3.5 rounded-2xl font-bold transition-colors">ลบไก่ทิ้ง</button>
+                <button type="submit" form="chickUpdateForm" class="flex-1 bg-[#059669] hover:bg-[#047857] text-white py-3.5 rounded-2xl font-bold shadow-sm transition-colors">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Notification Toast -->
     <div id="notification-toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 z-[100] flex items-center gap-3">
@@ -979,12 +1127,195 @@
 
         let isLoginMode = true;
         let currentUser = null;
-        let isCloudDataLoaded = false; // สำคัญมาก: ป้องกันการเซฟทับข้อมูลคลาวด์ตอนโหลดเริ่มต้น
-        let isGuestMode = false; // โหมดใช้งานแบบออฟไลน์ไม่ล็อกอิน
+        let isCloudDataLoaded = false;
+        let isGuestMode = false; 
         
         // --- CROPPER VARIABLES ---
         let imageCropQueue = [];
         let cropperInstance = null;
+
+        // --- GEMINI AI CONFIG ---
+        const geminiApiKey = "AIzaSyArvR11oj7UBWL4a-leMIh34P0vX2A4SXs"; // เว้นว่างไว้ เพื่อความปลอดภัย และระบบรันไทม์จะจัดการให้
+
+        // Exponential Backoff for API calls
+        async function fetchWithRetry(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    const data = await res.json(); // อ่านค่าจาก API เป็น JSON ก่อนเสมอ
+                    
+                    if (!res.ok) {
+                        // ดึงข้อความแจ้งเตือนที่เจาะจงจาก Google API โดยตรง
+                        const errorMsg = (data.error && data.error.message) ? data.error.message : `HTTP Error: ${res.status}`;
+                        throw new Error(errorMsg);
+                    }
+                    return data;
+                } catch (err) {
+                    if (i === retries - 1) throw err; // โยน Error ก้อนสุดท้ายออกไป
+                    console.warn(`⚠️ Gemini API retry ${i + 1}/${retries}... (${err.message})`);
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+
+        async function callGemini(promptText, systemInstruction) {
+            // ใช้ URL ที่ถูกต้องตามรูปแบบของ Google AI Studio
+            // สังเกตเครื่องหมาย ` (Backtick) ที่หัวและท้าย URL นะครับ ห้ามเปลี่ยนเป็น "
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            const result = await fetchWithRetry(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (result.candidates && result.candidates[0].content) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("ไม่ได้รับข้อมูลตอบกลับจาก AI กรุณาลองใหม่อีกครั้ง");
+            }
+        }
+
+        // Format basic Markdown to HTML
+        function formatMarkdownToHTML(text) {
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                .replace(/\n\n/g, '</p><p>') // Paragraphs
+                .replace(/\n- (.*?)/g, '<ul><li>$1</li></ul>') // Basic lists
+                .replace(/<\/ul><ul>/g, ''); // Fix list joining
+            
+            // Clean up standalone new lines
+            html = html.replace(/\n/g, '<br>');
+            return `<p>${html}</p>`;
+        }
+
+        // Feature 1: AI Vet Assistant
+        async function analyzeSymptomsWithAI() {
+            const input = document.getElementById('aiSymptomsInput').value.trim();
+            if (!input) {
+                showNotification('กรุณากรอกอาการของไก่ก่อนวิเคราะห์', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('aiAnalyzeBtn');
+            const loadingState = document.getElementById('aiLoadingState');
+            const emptyState = document.getElementById('aiEmptyState');
+            const resultOutput = document.getElementById('aiResultOutput');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl"></i> กำลังประมวลผล...';
+            
+            emptyState.classList.add('hidden');
+            resultOutput.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+
+            const systemPrompt = `คุณคือสัตวแพทย์และผู้เชี่ยวชาญด้านโรคไก่ชน 
+หน้าที่ของคุณคือวิเคราะห์อาการที่ผู้ใช้แจ้งมา และประเมินความน่าจะเป็นของโรค 
+รูปแบบการตอบ (ใช้ภาษาไทย เข้าใจง่าย):
+1. **โรคที่อาจเป็นไปได้:** (ระบุ 1-3 โรค พร้อมคำอธิบายสั้นๆ)
+2. **การรักษาเบื้องต้น:** (ยาที่ควรใช้ หรือวิธีดูแลเบื้องต้น)
+3. **การป้องกัน/คำแนะนำเพิ่มเติม:** (การแยกไก่ป่วย, การฆ่าเชื้อ ฯลฯ)
+ตอบด้วยข้อมูลกระชับและเป็นประโยชน์ ห้ามยาวเกินไป`;
+
+            try {
+                const responseText = await callGemini(`อาการของไก่: ${input}`, systemPrompt);
+                resultOutput.innerHTML = formatMarkdownToHTML(responseText);
+                
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                resultOutput.classList.remove('hidden');
+            } catch (error) {
+                console.error("❌ [analyzeSymptomsWithAI] Error:", error); // พิมพ์ Error ลง Console
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                emptyState.classList.remove('hidden');
+                
+                // ดึงเฉพาะ message มาแสดง ป้องกันปัญหา [object Object]
+                const errorMessage = error instanceof Error ? error.message : "ไม่สามารถเชื่อมต่อได้ (Unknown Error)";
+                showNotification(`ข้อผิดพลาด AI: ${errorMessage}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '✨ วิเคราะห์อาการด้วย AI';
+            }
+        }
+
+        // Feature 2: AI Farm Report Summary
+        async function generateAiReport() {
+            const container = document.getElementById('aiReportContainer');
+            const loadingState = document.getElementById('aiReportLoadingState');
+            const resultArea = document.getElementById('aiReportResult');
+            
+            container.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+
+            // Gather Data
+            const tMale = breedersDataStore.filter(b => b.gender === 'male' && b.status === 'alive').length;
+            const tFemale = breedersDataStore.filter(b => b.gender === 'female' && b.status === 'alive').length;
+            
+            let totalAlive = 0, totalSold = 0, totalDead = 0;
+            for (const id in batchesDataStore) {
+                totalAlive += batchesDataStore[id].aliveChicks || 0;
+                totalSold += batchesDataStore[id].soldChicks || 0;
+                totalDead += batchesDataStore[id].deadChicks || 0;
+            }
+
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            let monthInc = 0, monthExp = 0;
+            financeDataStore.forEach(t => {
+                const d = new Date(t.date);
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    if (t.type === 'income') monthInc += t.amount;
+                    else monthExp += t.amount;
+                }
+            });
+
+            const dataString = `
+ข้อมูลฟาร์มปัจจุบัน:
+- พ่อพันธุ์: ${tMale} ตัว
+- แม่พันธุ์: ${tFemale} ตัว
+- ลูกไก่เลี้ยงอยู่: ${totalAlive} ตัว
+- ลูกไก่ตายสะสม: ${totalDead} ตัว
+- ลูกไก่ขายแล้วสะสม: ${totalSold} ตัว
+การเงินเดือนนี้:
+- รายรับ: ${monthInc} บาท
+- รายจ่าย: ${monthExp} บาท
+- กำไรสุทธิ: ${monthInc - monthExp} บาท
+            `;
+
+            const systemPrompt = `คุณคือที่ปรึกษาธุรกิจฟาร์มไก่ชนมืออาชีพ 
+ฉันจะส่งข้อมูลสถิติฟาร์มให้คุณ โปรดทำดังนี้:
+1. **สรุปภาพรวม:** วิเคราะห์สั้นๆ ว่าสถานการณ์ฟาร์มตอนนี้เป็นอย่างไร (ดี, น่าเป็นห่วง, ต้องปรับปรุง)
+2. **จุดเด่น/จุดด้อย:** ระบุจากตัวเลข (เช่น อัตราการตายน้อย/เยอะ, กำไร/ขาดทุน)
+3. **คำแนะนำเพิ่มกำไร/ลดรายจ่าย:** ให้ไอเดีย 2-3 ข้อที่ทำได้จริงกับฟาร์มไก่ชน
+ตอบเป็นภาษาไทย กระชับ อ่านง่าย`;
+
+            try {
+                const responseText = await callGemini(dataString, systemPrompt);
+                resultArea.innerHTML = formatMarkdownToHTML(responseText);
+                
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                resultArea.classList.remove('hidden');
+            } catch (error) {
+                console.error("❌ [generateAiReport] Error:", error);
+                container.classList.add('hidden');
+                
+                // ดึงเฉพาะ message มาแสดง ป้องกันปัญหา [object Object]
+                const errorMessage = error instanceof Error ? error.message : "ไม่สามารถเชื่อมต่อได้ (Unknown Error)";
+                showNotification(`เกิดข้อผิดพลาดในการวิเคราะห์: ${errorMessage}`, 'error');
+            }
+        }
 
         // --- Layout JS ---
         function toggleSidebar() {
@@ -1008,6 +1339,7 @@
                 'breeding': 'การจัดการพ่อแม่พันธุ์',
                 'chicks': 'การจัดการคอกลูกไก่',
                 'vaccineCalendarSection': 'โปรแกรมวัคซีนและสุขภาพ',
+                'aiAssistantSection': 'ผู้ช่วยสัตวแพทย์ AI',
                 'finance': 'บัญชีฟาร์ม',
                 'reports': 'รายงานสถิติเชิงลึก',
                 'backupRestore': 'ระบบสำรองข้อมูล'
@@ -1026,14 +1358,24 @@
                 targetSection.classList.add('fade-in');
             }
             
+            // Reset nav buttons normal state
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
+                // Clear specific colored classes
+                btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold', 'text-purple-700', 'bg-purple-50');
+                if(!btn.classList.contains('text-purple-700')) { // don't override the AI button default color if not selected
+                    btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
+                }
             });
             
+            // Set active nav button state
             if (buttonElement) {
-                buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
-                buttonElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
+                if(sectionName === 'aiAssistantSection') {
+                    buttonElement.classList.add('bg-purple-50', 'text-purple-700', 'border-r-4', 'border-purple-600', 'font-semibold');
+                    buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent');
+                } else {
+                    buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium', 'text-purple-700', 'bg-purple-50');
+                    buttonElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
+                }
             }
 
             if(window.innerWidth < 1024) {
@@ -1135,7 +1477,7 @@
 
         // --- ImgBB Upload Function ---
         async function uploadToImgBB(base64Data) {
-            const base64Str = base64Data.split(',')[1]; // ตัดส่วน header data:image/jpeg;base64, ออก
+            const base64Str = base64Data.split(',')[1];
             const formData = new FormData();
             formData.append('image', base64Str);
             
@@ -1146,7 +1488,7 @@
                 });
                 const result = await response.json();
                 if (result.success) {
-                    return result.data.url; // ส่งคืน URL ที่อัปโหลดสำเร็จ
+                    return result.data.url;
                 } else {
                     throw new Error(result.error.message);
                 }
@@ -1213,7 +1555,6 @@
                     return;
                 }
                 
-                // จัดเรียงคอกไก่ในเมนูเลือกวัคซีนด้วยเช่นกัน (เก่าสุดขึ้นก่อน)
                 const sortedCoops = [...this.coops].sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate));
                 
                 coopList.innerHTML = sortedCoops.map(coop => {
@@ -1489,29 +1830,25 @@
 
             bindForms();
 
-            // ผูก Event ให้ฟอร์มล็อกอิน
             document.getElementById('authForm').addEventListener('submit', handleAuthSubmit);
 
-            // ปรับปรุง Event ให้ปุ่มในหน้าต่างตัดรูป
             document.getElementById('confirmCropBtn').addEventListener('click', async () => {
                 if(!cropperInstance) return;
                 const btn = document.getElementById('confirmCropBtn');
                 btn.disabled = true;
                 btn.innerHTML = '<span class="animate-spin inline-block">⏳</span> กำลังอัปโหลด...';
                 
-                // เอารูปที่ตัดแล้วออกมา (เป็น base64)
                 const canvas = cropperInstance.getCroppedCanvas({
                     maxWidth: 1024,
                     maxHeight: 1024,
-                    fillColor: '#fff' // เผื่อไฟล์ PNG พื้นใส
+                    fillColor: '#fff' 
                 });
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 
                 if (currentEditPhotoInfo) {
                     try {
-                        const imgUrl = await uploadToImgBB(dataUrl); // ส่งขึ้น ImgBB
+                        const imgUrl = await uploadToImgBB(dataUrl); 
                         
-                        // จัดการรูปพ่อแม่พันธุ์
                         if (currentEditPhotoInfo.type === 'breeder_edit') {
                             const breeder = breedersDataStore.find(b => b.id === currentEditPhotoInfo.id);
                             if (breeder && breeder.photos[currentEditPhotoInfo.index]) {
@@ -1548,7 +1885,6 @@
                 btn.textContent = 'กำลังอัปโหลด...';
                 
                 if (currentEditPhotoInfo.type === 'breeder_new') {
-                    // ข้ามการตัดรูป แต่บีบอัดให้เล็กลง และส่งขึ้น ImgBB
                     compressImage(currentEditPhotoInfo.file, 1024, 1024, 0.8, async (dataUrl) => {
                         try {
                             const imgUrl = await uploadToImgBB(dataUrl);
@@ -1568,7 +1904,6 @@
                         btn.textContent = 'ไม่ตัด (ใช้รูปเต็ม)';
                     });
                 } else {
-                    // ถ้าเป็นการแก้รูปเดิมแล้วกดข้าม ก็คือยกเลิก
                     closeCropperModal();
                     btn.disabled = false;
                     btn.textContent = 'ไม่ตัด (ใช้รูปเต็ม)';
@@ -1589,7 +1924,6 @@
                 authOverlay.classList.add('hidden');
                 document.getElementById('userIdDisplay').textContent = user.email;
                 
-                // เปิดหน้าจอซิงค์ข้อมูล
                 document.getElementById('syncOverlay').classList.remove('hidden');
                 document.getElementById('syncOverlay').classList.add('flex');
                 
@@ -1600,7 +1934,6 @@
                 
                 if (!isGuestMode) {
                     authOverlay.classList.remove('hidden');
-                    // เคลียร์ข้อมูลเมื่อออกจากระบบ
                     batchesDataStore = {};
                     breedersDataStore = [];
                     financeDataStore = [];
@@ -1617,7 +1950,6 @@
             document.getElementById('authOverlay').classList.add('hidden');
             document.getElementById('userIdDisplay').textContent = 'ออฟไลน์ (Guest)';
             
-            // ดึงข้อมูลเก่าในเครื่องมาแสดง
             const str = localStorage.getItem('farmData');
             if (str) {
                 try {
@@ -1630,7 +1962,7 @@
                 } catch(e) { console.error(e); }
             }
             
-            isCloudDataLoaded = true; // ปลดล็อกให้อนุญาตบันทึกลง LocalStorage ได้
+            isCloudDataLoaded = true; 
             renderAll();
             showNotification('เข้าสู่โหมดออฟไลน์ ข้อมูลจะถูกบันทึกแค่ในอุปกรณ์นี้', 'warning');
         }
@@ -1725,23 +2057,21 @@
                             console.error("Parse Error:", e);
                         }
                     } else {
-                        data = docData; // รองรับบัญชีเก่า
+                        data = docData; 
                     }
                     
                     batchesDataStore = data.batches || {}; 
                     breedersDataStore = data.breeders || []; 
                     financeDataStore = data.finance || [];
                     
-                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    isCloudDataLoaded = true; 
                     
-                    // บันทึกลงเครื่องเพื่อเป็น Backup ออฟไลน์
                     localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
                     
                     renderAll();
                     document.getElementById('syncOverlay').classList.add('hidden');
                     document.getElementById('syncOverlay').classList.remove('flex');
                 } else {
-                    // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
                     migrateLocalData();
                 }
             }, err => {
@@ -1754,7 +2084,7 @@
 
         function migrateLocalData() {
             const str = localStorage.getItem('farmData');
-            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            isCloudDataLoaded = true; 
             
             if (str) {
                 try {
@@ -1763,14 +2093,14 @@
                         batchesDataStore = data.batches || {}; 
                         breedersDataStore = data.breeders || []; 
                         financeDataStore = data.finance || [];
-                        saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
+                        saveData(); 
                         showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
                     }
                 } catch (e) { 
                     console.error(e);
                 }
             } else {
-                saveData(); // Save empty document to cloud
+                saveData(); 
             }
             
             renderAll();
@@ -1779,7 +2109,6 @@
         }
 
         function renderAll() {
-            // เช็คและซ่อมแซมโครงสร้างข้อมูลให้สมบูรณ์
             breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
             Object.values(batchesDataStore).forEach(b => {
                 if (!b.vaccinations) b.vaccinations = vaccineCalendar.generateVaccinationSchedule(b.birthDate);
@@ -1790,17 +2119,14 @@
             if (grid) {
                 grid.innerHTML = '';
                 
-                // ดึงข้อมูลและเรียงลำดับคอกไก่
                 const batchesArray = Object.values(batchesDataStore);
                 batchesArray.sort((a, b) => {
                     const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
                     const bAlive = b.chicks ? b.chicks.filter(c => c.status === 'alive').length : 0;
                     
-                    // 1. แยกคอกที่ปิดแล้ว (ไม่มีไก่มีชีวิต) ไปไว้ท้ายสุด
                     if (aAlive === 0 && bAlive > 0) return 1;
                     if (aAlive > 0 && bAlive === 0) return -1;
                     
-                    // 2. เรียงตามอายุ (เกิดก่อน = แก่กว่า = อยู่บนสุด)
                     return new Date(a.birthDate) - new Date(b.birthDate);
                 });
                 
@@ -1818,19 +2144,15 @@
             }
         }
 
-        // --- Save Data Function (Cloud Sync) ---
         function saveData() {
-            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            if (!isCloudDataLoaded) return; 
             
-            // รวบรวมข้อมูลทั้งหมด
             const farmDataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
             
-            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
             localStorage.setItem('farmData', JSON.stringify(farmDataObj));
             
             if (!currentUser) return;
             
-            // ทำความสะอาดและเข้ารหัสข้อมูลเป็น String เพื่อป้องกัน Error: Property array contains an invalid nested entity
             const dataToSave = { 
                 payload: JSON.stringify(farmDataObj),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1943,7 +2265,6 @@
                     };
                     batchesDataStore[newBatchId] = newBatchData;
                     
-                    // Render ใหม่ทั้งหมดเพื่อจัดเรียง
                     renderAll(); 
                     
                     showNotification(`บันทึกคอกใหม่สำเร็จ!`, 'success'); closeAddChickBatchModal();
@@ -1985,7 +2306,7 @@
                             batch.totalChicks += newChicksCount;
                         }
                         renderBatchDetails(currentBatchId); renderChickGallery(currentBatchId); 
-                        renderAll(); // เพื่อให้จัดเรียงลำดับใหม่ถ้าอายุเปลี่ยน
+                        renderAll(); 
                         saveData(); showNotification('แก้ไขข้อมูลคอกสำเร็จ!', 'success'); closeEditBatchModal();
                     }
                 });
@@ -2036,7 +2357,6 @@
                     filterFinance(currentFinancePeriod); 
                     updateBatchStatistics(currentBatchId); 
                     
-                    // ถ้าไก่ตายหรือขายหมดสถานะอาจเปลี่ยนเป็น "คอกปิด" ต้อง render ใหม่ให้ย้ายลงล่าง
                     const aliveCount = batch.chicks.filter(c => c.status === 'alive').length;
                     if (aliveCount === 0 || originalStatus !== status) {
                          renderAll();
@@ -2148,7 +2468,6 @@
             const aliveCount = data.chicks ? data.chicks.filter(c => c.status === 'alive').length : 0;
             const isClosed = data.chicks && data.chicks.length > 0 && aliveCount === 0;
 
-            // Visual Cue สำหรับคอกปิด
             const cardClass = isClosed 
                 ? 'bg-slate-50 rounded-2xl p-6 card-shadow relative border-2 border-slate-200 grayscale-[60%] opacity-90'
                 : 'bg-white rounded-2xl p-6 card-shadow card-hover relative border border-slate-100';
@@ -2313,9 +2632,7 @@
         function closeBreederPhotoModal() { document.getElementById('breederPhotoModal').classList.add('hidden'); }
         function goBackToChicks() { showSection('chicks', document.querySelector('button[onclick*="chicks"]')); }
 
-        // --- NEW/UPDATED PHOTO MANAGEMENT FUNCTIONS ---
-
-        let currentEditPhotoInfo = null; // เก็บ state การตัดรูป {type: 'breeder_edit'|'breeder_new', id: '...', index: 0, file: ...}
+        let currentEditPhotoInfo = null; 
 
         function openBreederPhotoModal(id) {
             document.getElementById('currentBreederIdForPhotos').value = id;
@@ -2337,7 +2654,6 @@
                 const div = document.createElement('div');
                 div.className = 'relative group aspect-square rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-slate-100';
                 
-                // รูปหลัก (index 0) จะมี badge พิเศษ
                 const isMain = index === 0;
                 const mainBadge = isMain ? '<span class="absolute top-2 left-2 bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-md font-bold z-10 shadow-sm"><i class="ph ph-star-fill"></i> หน้าปก</span>' : '';
                 
@@ -2368,7 +2684,6 @@
                 return;
             }
 
-            // นำไฟล์แรกเข้าคิวตัดรูปก่อน
             const file = files[0]; 
             currentEditPhotoInfo = { type: 'breeder_new', id: id, file: file };
             
@@ -2378,7 +2693,6 @@
             };
             reader.readAsDataURL(file);
             
-            // เคลียร์ค่า input
             event.target.value = '';
         }
 
@@ -2386,13 +2700,12 @@
             const breeder = breedersDataStore.find(b => b.id === id);
             if (!breeder || index === 0) return;
             
-            // สลับรูปที่เลือกมาไว้ที่ตำแหน่งแรก (index 0)
             const selectedPhoto = breeder.photos.splice(index, 1)[0];
             breeder.photos.unshift(selectedPhoto);
             
             saveData();
             renderBreederPhotoGallery(id);
-            renderBreeders(); // อัปเดตตารางหลักให้ปกเปลี่ยน
+            renderBreeders(); 
             showNotification('ตั้งเป็นรูปหน้าปกเรียบร้อย', 'success');
         }
 
@@ -2426,10 +2739,9 @@
             
             if (cropperInstance) cropperInstance.destroy();
             
-            // ตั้งค่า Cropper.js ให้อิสระในการปรับขอบเขต
             cropperInstance = new Cropper(image, {
                 viewMode: 1,
-                dragMode: 'move', // ค่าเริ่มต้นให้ลากเลื่อนรูปได้
+                dragMode: 'move', 
                 autoCropArea: 0.9,
                 restore: false,
                 guides: true,
@@ -2487,7 +2799,7 @@
         function renderBatchDetails(batchId) {
             const data = batchesDataStore[batchId];
             if (!data) return;
-            document.getElementById('batchDetailName').textContent = data.name;
+           document.getElementById('batchDetailName').textContent = data.name;
             document.getElementById('batchDetailParents').textContent = data.parents;
             const birthDate = new Date(data.birthDate);
             document.getElementById('batchDetailBirthDate').textContent = birthDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -2550,6 +2862,61 @@
                 c.querySelector('.batch-dead').textContent = dead; 
                 c.querySelector('.batch-revenue').textContent = `฿${rev.toLocaleString()}`; 
             } 
+        }
+
+        function renderDashboard() {
+            let all = [];
+            financeDataStore.forEach(t => all.push({ date: t.date, type: 'finance', data: t }));
+            Object.values(batchesDataStore).forEach(b => {
+                all.push({ date: b.birthDate, type: 'birth', data: b });
+                if(b.vaccinations) b.vaccinations.forEach(v => { if(v.status === 'completed' && v.completedDate) all.push({ date: v.completedDate, type: 'vaccine', data: { ...v, coopName: b.name } }); });
+            });
+            all.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const container = document.getElementById('dashboardRecentActivities');
+            if (container) {
+                container.innerHTML = '';
+                const recentActivities = all.slice(0, 5);
+                if (recentActivities.length === 0) {
+                    container.innerHTML = '<p class="text-center text-slate-500 py-4 font-medium">ยังไม่มีกิจกรรมล่าสุด</p>';
+                } else {
+                    recentActivities.forEach(act => {
+                        let activityHtml = '';
+                        if (act.type === 'finance') {
+                            const isIncome = act.data.type === 'income';
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl ${isIncome ? 'bg-emerald-50 border border-emerald-100' : 'bg-rose-50 border border-rose-100'}">
+                                <div><p class="font-bold ${isIncome ? 'text-emerald-800' : 'text-rose-800'}">${act.data.note}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="${isIncome ? 'text-emerald-600' : 'text-rose-600'} font-bold">${isIncome ? '+' : '-'}฿${act.data.amount.toLocaleString()}</span>
+                            </div>`;
+                        } else if (act.type === 'birth') {
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-amber-50 border border-amber-100">
+                                <div><p class="font-bold text-amber-800">🐣 บันทึกลูกไก่ ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="text-amber-600 font-bold">${act.data.totalChicks} ตัว</span>
+                            </div>`;
+                        } else if (act.type === 'vaccine') {
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-100">
+                                <div><p class="font-bold text-blue-800">💉 ให้วัคซีน ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${act.data.coopName} - ${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="text-blue-600 font-bold">สำเร็จ</span>
+                            </div>`;
+                        }
+                        container.innerHTML += activityHtml;
+                    });
+                }
+            }
+
+            const alerts = document.getElementById('dashboardVaccineAlerts');
+            if (alerts) {
+                alerts.innerHTML = '';
+                let upcoming = []; const t = new Date(); t.setHours(0,0,0,0); const t3 = new Date(t); t3.setDate(t.getDate()+3);
+                Object.values(batchesDataStore).forEach(b => {
+                    if(b.vaccinations) b.vaccinations.forEach(v => { const vd = new Date(v.date); vd.setHours(0,0,0,0); if(v.status === 'pending' && vd >= t && vd <= t3) upcoming.push({ ...v, coopName: b.name, d: Math.ceil((vd-t)/86400000) }); });
+                });
+                upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
+                if(!upcoming.length) {
+                    alerts.innerHTML = '<div class="text-center text-slate-400 py-4 font-medium">ไม่มีรายการแจ้งเตือน</div>';
+                } else {
+                    upcoming.forEach(a => alerts.innerHTML += `<div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border-l-4 border-purple-500"><div><p class="font-bold text-purple-800">${a.coopName}: ${a.name}</p><p class="text-xs text-purple-600/70 mt-0.5">${new Date(a.date).toLocaleDateString('th-TH')}</p></div><span class="text-purple-700 bg-purple-100 px-2 py-1 rounded-lg text-xs font-bold">${a.d === 0 ? 'วันนี้' : `อีก ${a.d} วัน`}</span></div>`);
+                }
+            }
         }
 
         function updateGlobalStatistics() {
