@@ -1160,58 +1160,26 @@
         }
 
         async function callGemini(promptText, systemInstruction) {
-    // ใช้เวอร์ชัน v1beta และรุ่นล่าสุดที่เปิดให้ใช้งานทั่วไปคือ gemini-1.5-flash
-    // สังเกตเครื่องหมาย ` (Backtick) ครอบ URL ห้ามลบออกนะครับ
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-    
-    const payload = {
-        contents: [{
-            parts: [{
-                text: `Instruction: ${systemInstruction}\n\nQuestion: ${promptText}`
-            }]
-        }]
-    };
+            // ใช้ URL ที่ถูกต้องตามรูปแบบของ Google AI Studio
+            // สังเกตเครื่องหมาย ` (Backtick) ที่หัวและท้าย URL นะครับ ห้ามเปลี่ยนเป็น "
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
 
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            // ถ้าพัง จะดึง Error จาก Google มาแสดงให้คุณเห็นชัดๆ
-            throw new Error(result.error ? result.error.message : "API Connection Error");
-        }
-
-        if (result.candidates && result.candidates[0].content) {
-            return result.candidates[0].content.parts[0].text;
-        } else {
-            throw new Error("AI ไม่ตอบกลับข้อมูล กรุณาลองใหม่อีกครั้ง");
-        }
-    } catch (err) {
-        // ส่งข้อผิดพลาดไปแสดงที่หน้าจอแอป
-        throw err;
-    }
-}
-
-            const response = await fetch(url, {
+            const result = await fetchWithRetry(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error ? errorData.error.message : "เชื่อมต่อ API ไม่สำเร็จ");
+            if (result.candidates && result.candidates[0].content) {
+                return result.candidates[0].content.parts[0].text;
+            } else {
+                throw new Error("ไม่ได้รับข้อมูลตอบกลับจาก AI กรุณาลองใหม่อีกครั้ง");
             }
-
-            const result = await response.json();
-            return result.candidates[0].content.parts[0].text;
         }
 
         // Format basic Markdown to HTML
