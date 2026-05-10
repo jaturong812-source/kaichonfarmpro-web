@@ -1,18 +1,10 @@
 <!DOCTYPE html>
+<!-- System Fix: Ensure correct HTML compilation -->
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ไก่ชนฟาร์มโปร - Local & ImgBB Storage & AI</title>
-    
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#059669">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="ฟาร์มโปร">
-    <link rel="apple-touch-icon" href="icon-192.png">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -30,58 +22,59 @@
         @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
         
         :root {
-            --primary: #059669; /* Emerald 600 (โทนธรรมชาติสบายตา) */
+            --primary: #059669; /* Emerald 600 */
             --primary-hover: #047857; /* Emerald 700 */
-            --bg-body: #f8fafc; /* Slate 50 (สว่างสะอาดตา) */
-            --card-bg: #ffffff; /* White */
-            --text-main: #1e293b; /* Slate 800 (ตัดกับพื้นหลังชัดเจน) */
-            --border-color: #f1f5f9; /* Slate 100 */
+            --bg-body: #f8fafc; /* Slate 50 */
         }
         
         body { 
             font-family: 'Prompt', sans-serif; 
-            background-color: var(--bg-body) !important;
-            color: var(--text-main) !important;
+            background-color: var(--bg-body);
+            color: #1e293b; /* Slate 800 */
         }
-
-        /* Premium Card Shadows - Soft & Clean (เงานุ่มนวล ละมุนตา) */
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
         .card-shadow {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-            border: 1px solid var(--border-color) !important;
-            background-color: var(--card-bg) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f1f5f9;
         }
         
         .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover { 
-            transform: translateY(-3px); 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04) !important; 
-            border-color: var(--primary) !important;
-        }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
         
         .fade-in { animation: fadeIn 0.4s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Calendar Styles for Light Theme */
+        /* Calendar Styles */
         .calendar-day { transition: all 0.2s ease; border: 1px solid transparent; }
-        .calendar-day:hover { border-color: #cbd5e1 !important; transform: scale(1.02); }
-        .vaccination-day { background-color: #ecfdf5 !important; color: var(--primary) !important; border-color: #a7f3d0 !important; font-weight: 500; }
-        .completed-day { background-color: #f1f5f9 !important; color: #64748b !important; text-decoration: line-through; border-color: #e2e8f0 !important; }
-        .overdue-day { background-color: #fef2f2 !important; color: #ef4444 !important; border-color: #fecaca !important; font-weight: 500; }
-        .skipped-day { background-color: transparent !important; color: #64748b !important; border-color: #cbd5e1 !important; border-style: dashed; }
+        .calendar-day:hover { border-color: #cbd5e1; transform: scale(1.02); }
+        .vaccination-day { background-color: #ecfdf5; color: #059669; border-color: #a7f3d0; font-weight: 500; }
+        .completed-day { background-color: #f1f5f9; color: #64748b; text-decoration: line-through; border-color: #e2e8f0; }
+        .overdue-day { background-color: #fef2f2; color: #dc2626; border-color: #fecaca; font-weight: 500; }
+        .skipped-day { background-color: #f8fafc; color: #94a3b8; border-color: #cbd5e1; border-style: dashed; }
         
         .aspect-3-4 { padding-top: 133.33%; }
-        #sidebar { transition: transform 0.3s ease-in-out; background-color: var(--card-bg) !important; border-right-color: var(--border-color) !important; }
-        #cropImage { display: block; max-width: 100%; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-body); }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Sidebar transition */
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        
+        /* Cropper adjustments */
+        #cropImage { display: block; max-width: 100%; }
         
         /* Form Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e2e8f0; border-radius: 10px; }
+
+        /* AI Text Formatting */
+        .ai-content p { margin-bottom: 0.75rem; }
+        .ai-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .ai-content li { margin-bottom: 0.25rem; }
+        .ai-content strong { color: #1e293b; font-weight: 600; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden bg-slate-50">
@@ -152,6 +145,13 @@
             
             <button onclick="showSection('vaccineCalendarSection', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-slate-600 hover:bg-slate-50 border-transparent border-r-4 hover:text-slate-900 transition-colors">
                 <i class="ph ph-syringe text-xl"></i> โปรแกรมวัคซีน
+            </button>
+
+            <!-- เพิ่มเมนู AI สัตวแพทย์ -->
+            <p class="px-3 text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2 mt-6 flex items-center gap-1"><i class="ph ph-sparkle text-purple-500"></i> ฟีเจอร์อัจฉริยะ</p>
+            
+            <button onclick="showSection('aiAssistantSection', this)" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-purple-700 bg-purple-50 border-transparent border-r-4 hover:bg-purple-100 transition-colors font-medium">
+                <i class="ph ph-magic-wand text-xl"></i> ผู้ช่วยสัตวแพทย์ AI
             </button>
 
             <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6">การเงินและรายงาน</p>
@@ -290,6 +290,75 @@
                     </div>
                 </div>
 
+                <!-- AI ASSISTANT SECTION -->
+                <div id="aiAssistantSection" class="section hidden">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500 flex items-center gap-2">
+                                <i class="ph ph-magic-wand text-purple-600"></i> ผู้ช่วยสัตวแพทย์ AI
+                            </h2>
+                            <p class="text-slate-500 text-sm mt-1">วิเคราะห์อาการป่วยของไก่และแนะนำวิธีรักษาเบื้องต้นด้วยพลังของ Gemini AI</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Input Area -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-white rounded-2xl p-6 card-shadow border-t-4 border-purple-500">
+                                <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <i class="ph ph-stethoscope text-purple-500 text-xl"></i> อธิบายอาการของไก่
+                                </h3>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-slate-700 mb-2">อาการที่พบ (อธิบายให้ละเอียดที่สุด)</label>
+                                    <textarea id="aiSymptomsInput" rows="5" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-purple-500 outline-none transition custom-scrollbar" placeholder="เช่น ไก่ซึม ไม่กินอาหาร ขี้ขาวปนเขียว ขนพอง หายใจเสียงดัง..."></textarea>
+                                </div>
+                                <div class="mb-5 flex flex-wrap gap-2">
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ไก่ซึม '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ไก่ซึม</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ขี้ขาว '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ขี้ขาว</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'ขี้เขียว '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">ขี้เขียว</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'หน้าบวม '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">หน้าบวม</button>
+                                    <button type="button" onclick="document.getElementById('aiSymptomsInput').value += 'หายใจดัง '" class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-100 transition">หายใจดัง</button>
+                                </div>
+                                <button id="aiAnalyzeBtn" onclick="analyzeSymptomsWithAI()" class="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                                    ✨ วิเคราะห์อาการด้วย AI
+                                </button>
+                            </div>
+                            
+                            <div class="bg-amber-50 rounded-2xl p-5 border border-amber-100 text-sm text-amber-800">
+                                <p class="font-bold flex items-center gap-1 mb-1"><i class="ph ph-warning-circle text-lg"></i> ข้อควรระวัง</p>
+                                <p>ผลการวิเคราะห์จาก AI เป็นเพียงการประเมินเบื้องต้นจากอาการที่ระบุเท่านั้น ไม่สามารถใช้ทดแทนการวินิจฉัยจากสัตวแพทย์ผู้เชี่ยวชาญได้</p>
+                            </div>
+                        </div>
+
+                        <!-- Output Area -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white rounded-2xl p-6 card-shadow h-full min-h-[400px] flex flex-col relative">
+                                <h3 class="font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
+                                    <i class="ph ph-clipboard-text text-blue-500 text-xl"></i> ผลการวิเคราะห์และคำแนะนำ
+                                </h3>
+                                
+                                <!-- Loading State -->
+                                <div id="aiLoadingState" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm rounded-2xl flex-col items-center justify-center z-10">
+                                    <div class="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+                                    <p class="text-purple-700 font-bold animate-pulse">กำลังวิเคราะห์ข้อมูลด้วย Gemini AI...</p>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div id="aiEmptyState" class="flex-1 flex flex-col items-center justify-center text-slate-400">
+                                    <i class="ph ph-robot text-6xl mb-3 text-slate-200"></i>
+                                    <p>กรอกอาการของไก่ที่ช่องด้านซ้ายมือ</p>
+                                    <p class="text-sm">แล้วคลิก "วิเคราะห์อาการด้วย AI"</p>
+                                </div>
+
+                                <!-- Result Output -->
+                                <div id="aiResultOutput" class="hidden flex-1 overflow-y-auto custom-scrollbar pr-2 text-slate-700 ai-content text-sm sm:text-base leading-relaxed">
+                                    <!-- AI text will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BREEDING SECTION -->
                 <div id="breeding" class="section hidden">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -300,16 +369,6 @@
                         <button onclick="showAddBreederModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors w-full sm:w-auto justify-center">
                             <i class="ph ph-plus-circle text-lg"></i> เพิ่มไก่พันธุ์
                         </button>
-                    </div>
-
-                    <!-- Search Box -->
-                    <div class="mb-6">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="ph ph-magnifying-glass text-slate-400 text-lg"></i>
-                            </div>
-                            <input type="text" id="breederSearchInput" oninput="renderBreeders()" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow shadow-sm text-sm" placeholder="ค้นหาชื่อ, รหัส หรือ สายพันธุ์...">
-                        </div>
                     </div>
 
                     <div class="bg-white rounded-2xl p-5 card-shadow mb-8">
@@ -362,16 +421,6 @@
                         <button onclick="showAddChickBatchModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors w-full sm:w-auto justify-center">
                             <i class="ph ph-plus-circle text-lg"></i> บันทึกคอกใหม่
                         </button>
-                    </div>
-
-                    <!-- Search Box for Chicks -->
-                    <div class="mb-6">
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="ph ph-magnifying-glass text-slate-400 text-lg"></i>
-                            </div>
-                            <input type="text" id="batchSearchInput" oninput="renderAll()" class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow shadow-sm text-sm" placeholder="ค้นหาชื่อคอก, พ่อแม่พันธุ์ หรือสายเลือด...">
-                        </div>
                     </div>
 
                     <div id="chickBatchesGrid" class="grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
@@ -564,9 +613,6 @@
                             <h2 class="text-2xl font-bold text-slate-800">บัญชีฟาร์ม</h2>
                             <p class="text-slate-500 text-sm mt-1">จัดการรายรับ-รายจ่าย และดูผลประกอบการ</p>
                         </div>
-                        <button onclick="printFinanceReport()" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors w-full sm:w-auto justify-center">
-                            <i class="ph ph-printer text-lg"></i> พิมพ์รายงาน
-                        </button>
                     </div>
                     
                     <!-- Filters -->
@@ -652,24 +698,27 @@
                             <h2 class="text-2xl font-bold text-slate-800">รายงานสถิติเชิงลึก</h2>
                             <p class="text-slate-500 text-sm mt-1">วิเคราะห์ประสิทธิภาพการเลี้ยงและผลประกอบการฟาร์ม</p>
                         </div>
+                        <button onclick="generateAiReport()" class="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 shadow-sm transition-colors w-full sm:w-auto justify-center">
+                            ✨ ให้ AI สรุปรายงานฟาร์ม
+                        </button>
                     </div>
                     
-                    <!-- AI Report Banner -->
-                    <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-2xl p-6 card-shadow mb-6 text-white relative overflow-hidden">
-                        <div class="absolute top-0 right-0 opacity-10 text-9xl -mt-10 -mr-10"><i class="ph ph-robot"></i></div>
-                        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div>
-                                <h3 class="text-xl font-bold mb-1 flex items-center gap-2"><i class="ph ph-magic-wand text-2xl"></i> AI วิเคราะห์ความคุ้มค่า</h3>
-                                <p class="text-emerald-50 text-sm">ประเมินกำไรที่แท้จริง หักลบต้นทุนแฝง (ค่าอาหาร/ไฟ) อัตโนมัติตามอายุไก่</p>
-                            </div>
-                            <button id="btnAiReport" onclick="generateAiReport()" class="w-full md:w-auto bg-white text-emerald-700 hover:bg-emerald-50 px-6 py-3 rounded-xl font-bold shadow-md transition-colors flex items-center justify-center gap-2 shrink-0">
-                                <i class="ph ph-magic-wand text-lg"></i> สั่งให้ AI วิเคราะห์
-                            </button>
+                    <!-- AI Report Output Area -->
+                    <div id="aiReportContainer" class="hidden bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 mb-6 card-shadow border border-purple-100 relative">
+                        <button onclick="document.getElementById('aiReportContainer').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="ph ph-x text-xl"></i></button>
+                        <h3 class="text-lg font-bold text-purple-800 mb-4 flex items-center gap-2">
+                            <i class="ph ph-magic-wand text-xl"></i> บทวิเคราะห์และคำแนะนำจาก AI
+                        </h3>
+                        
+                        <div id="aiReportLoadingState" class="flex flex-col items-center justify-center py-6">
+                            <div class="w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-3"></div>
+                            <p class="text-purple-700 font-medium animate-pulse">AI กำลังวิเคราะห์ข้อมูลทั้งหมดของฟาร์ม...</p>
+                        </div>
+                        
+                        <div id="aiReportResult" class="hidden ai-content text-slate-700 text-sm sm:text-base leading-relaxed">
+                            <!-- AI Report Text Injected Here -->
                         </div>
                     </div>
-                    
-                    <!-- กล่องแสดงผล AI (ซ่อนไว้ตอนแรก) -->
-                    <div id="aiReportResult" class="hidden mb-6 bg-white rounded-2xl p-6 card-shadow transition-all"></div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                         <!-- Top Breeders -->
@@ -811,25 +860,7 @@
     <!-- Image Lightbox Modal -->
     <div id="imageLightboxModal" class="fixed inset-0 bg-slate-900/95 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300" onclick="closeLightbox()">
         <button class="absolute top-4 right-4 text-white/70 hover:text-white p-2 bg-black/20 rounded-full transition-colors"><i class="ph ph-x text-2xl"></i></button>
-        
-        <div class="relative w-full max-w-5xl flex items-center justify-center" onclick="event.stopPropagation()">
-            <!-- ปุ่มซ้าย -->
-            <button id="prevLightboxBtn" class="hidden absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm z-10" onclick="changeLightboxImage(-1)">
-                <i class="ph ph-caret-left text-2xl md:text-3xl"></i>
-            </button>
-            
-            <img id="lightboxImage" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 transform scale-95">
-            
-            <!-- ปุ่มขวา -->
-            <button id="nextLightboxBtn" class="hidden absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/70 text-white p-3 rounded-full transition-all backdrop-blur-sm z-10" onclick="changeLightboxImage(1)">
-                <i class="ph ph-caret-right text-2xl md:text-3xl"></i>
-            </button>
-            
-            <!-- Counter -->
-            <div id="lightboxCounter" class="hidden absolute bottom-[-40px] left-1/2 -translate-x-1/2 bg-black/40 text-white px-4 py-1.5 rounded-full text-sm font-medium tracking-widest backdrop-blur-sm">
-                1 / 1
-            </div>
-        </div>
+        <img id="lightboxImage" src="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 transform scale-95" onclick="event.stopPropagation()">
     </div>
 
     <!-- Add Breeder Modal -->
@@ -847,7 +878,6 @@
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">เพศ</label><select id="breederGender" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"><option value="male">พ่อพันธุ์</option><option value="female">แม่พันธุ์</option></select></div>
                     </div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์</label><input type="text" id="breederBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">วันเกิด / วันฟัก (ใช้วัดอายุ)</label><input type="date" id="breederBirthDate" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">ที่มา</label><input type="text" id="breederSource" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">ราคาซื้อ (บาท) - บันทึกรายจ่ายอัตโนมัติ</label><input type="number" id="breederPrice" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="0"></div>
                     
@@ -896,7 +926,6 @@
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัส</label><input type="text" id="editBreederCode" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์</label><input type="text" id="editBreederBreed" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                     </div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">วันเกิด / วันฟัก (ใช้วัดอายุ)</label><input type="date" id="editBreederBirthDate" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">ที่มา</label><input type="text" id="editBreederSource" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"></div>
                 </form>
             </div>
@@ -917,14 +946,8 @@
             </div>
             <div class="p-6">
                 <form id="addChickBatchForm" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">พ่อพันธุ์</label><select id="fatherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์พ่อ (อ้างอิง)</label><input type="text" id="fatherBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="เช่น พม่า, ง่อน"></div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">แม่พันธุ์</label><select id="motherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์แม่ (อ้างอิง)</label><input type="text" id="motherBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="เช่น พม่า, ง่อน"></div>
-                    </div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">พ่อพันธุ์</label><select id="fatherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">แม่พันธุ์</label><select id="motherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">วันเกิด</label><input type="date" id="chickBirthDate" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" required></div>
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">จำนวนลูกไก่</label><input type="number" id="chickCount" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none" required min="1"></div>
@@ -951,14 +974,8 @@
             </div>
             <div class="p-6">
                 <form id="editBatchForm" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">พ่อพันธุ์</label><select id="editBatchFatherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์พ่อ (อ้างอิง)</label><input type="text" id="editBatchFatherBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="เช่น พม่า, ง่อน"></div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">แม่พันธุ์</label><select id="editBatchMotherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สายพันธุ์แม่ (อ้างอิง)</label><input type="text" id="editBatchMotherBreed" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="เช่น พม่า, ง่อน"></div>
-                    </div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">พ่อพันธุ์</label><select id="editBatchFatherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">แม่พันธุ์</label><select id="editBatchMotherSelect" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500"></select></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">วันเกิด</label><input type="date" id="editBatchBirthDate" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500" required></div>
                     <div><label class="block text-sm font-semibold text-slate-700 mb-1">เพิ่มจำนวนไก่ใหม่ (ตัว)</label><input type="number" id="addChickCount" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500" placeholder="0"></div>
                     <div>
@@ -984,20 +1001,9 @@
             <div class="p-6 overflow-y-auto flex-1 custom-scrollbar">
                 <form id="chickUpdateForm" class="space-y-4">
                     <input type="hidden" id="updateChickId" value="">
+                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสไก่/ชื่อเรียก (ไม่บังคับ)</label><input type="text" id="chickCode" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="เช่น C001"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">ชื่อลูกไก่</label><input type="text" id="chickName" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="เช่น เจ้าแดง"></div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">รหัสไก่</label><input type="text" id="chickCode" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="เช่น C001"></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label>
-                            <select id="chickStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 font-medium outline-none transition" onchange="toggleSaleFields()">
-                                <option value="alive">🟢 มีชีวิต</option>
-                                <option value="sold">💰 ขายแล้ว</option>
-                                <option value="dead">💀 ตาย</option>
-                                <option value="promoted">👑 เลื่อนขั้นแล้ว</option>
-                            </select>
-                        </div>
+                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานะ</label><select id="chickStatus" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 font-medium outline-none transition" onchange="toggleSaleFields()"><option value="alive">🟢 มีชีวิต</option><option value="sold">💰 ขายแล้ว</option><option value="dead">💀 ตาย</option></select></div>
                         <div><label class="block text-sm font-semibold text-slate-700 mb-1">เพศ</label><select id="chickGender" class="w-full border border-slate-200 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-emerald-500 outline-none transition"><option value="unknown">ไม่ระบุ</option><option value="male">ตัวผู้</option><option value="female">ตัวเมีย</option></select></div>
                     </div>
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -1023,13 +1029,9 @@
                 </form>
             </div>
             <!-- Sticky Footer for Actions -->
-            <div class="p-5 border-t border-slate-100 shrink-0 bg-white flex flex-col gap-3">
-                <button type="button" onclick="generateChickCertificate()" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 py-3 rounded-2xl font-bold transition-colors shadow-sm flex items-center justify-center gap-2 border border-blue-200"><i class="ph ph-certificate text-xl"></i> ดูใบรับรองสายเลือด</button>
-                <button type="button" onclick="promoteToBreeder()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-700 py-3 rounded-2xl font-bold transition-colors shadow-sm flex items-center justify-center gap-2"><i class="ph ph-crown text-xl"></i> เลื่อนขั้นเป็นพ่อ/แม่พันธุ์</button>
-                <div class="flex gap-4">
-                    <button type="button" onclick="deleteChick()" class="flex-1 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 py-3 rounded-2xl font-bold transition-colors">ลบไก่ทิ้ง</button>
-                    <button type="submit" form="chickUpdateForm" class="flex-1 bg-[#059669] hover:bg-[#047857] text-white py-3 rounded-2xl font-bold shadow-sm transition-colors">บันทึกข้อมูล</button>
-                </div>
+            <div class="p-5 border-t border-slate-100 shrink-0 bg-white flex gap-4">
+                <button type="button" onclick="deleteChick()" class="flex-1 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 py-3.5 rounded-2xl font-bold transition-colors">ลบไก่ทิ้ง</button>
+                <button type="submit" form="chickUpdateForm" class="flex-1 bg-[#059669] hover:bg-[#047857] text-white py-3.5 rounded-2xl font-bold shadow-sm transition-colors">บันทึกข้อมูล</button>
             </div>
         </div>
     </div>
@@ -1092,122 +1094,9 @@
         </div>
     </div>
 
-    <!-- Fight Record Modal -->
-    <div id="fightRecordModal" class="fixed inset-0 bg-slate-900/80 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-md transition-opacity">
-        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="flex justify-between items-center p-5 border-b border-slate-100 shrink-0 bg-white">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph ph-sword text-rose-500 text-2xl"></i> สถิติการชน / ซ้อม</h3>
-                <button type="button" onclick="closeFightRecordModal()" class="text-slate-400 hover:text-slate-700 bg-slate-50 p-1.5 rounded-xl transition-colors"><i class="ph ph-x text-xl"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar bg-slate-50/50">
-                <form id="fightRecordForm" class="space-y-4 mb-8 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-                    <input type="hidden" id="currentFightBreederId">
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">วันที่</label><input type="date" id="fightDate" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition" required></div>
-                    <div><label class="block text-sm font-semibold text-slate-700 mb-1">สถานที่ / สนาม</label><input type="text" id="fightLocation" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition" placeholder="เช่น สนามเทิดไท, ซ้อมหลังบ้าน" required></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-1">ผลลัพธ์</label>
-                            <select id="fightResult" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500 font-medium outline-none transition">
-                                <option value="win">🏆 ชนะ</option>
-                                <option value="draw">🤝 เสมอ</option>
-                                <option value="lose">💔 แพ้</option>
-                                <option value="train">🥊 ซ้อม</option>
-                            </select>
-                        </div>
-                        <div><label class="block text-sm font-semibold text-slate-700 mb-1">เดิมพัน/รางวัล (฿)</label><input type="number" id="fightPrize" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-none transition" placeholder="0"></div>
-                    </div>
-                    <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-5 py-3 rounded-xl font-bold transition shadow-sm mt-2">บันทึกสถิติ</button>
-                </form>
-                
-                <div>
-                    <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="ph ph-clock-counter-clockwise text-slate-400"></i> ประวัติย้อนหลัง</h4>
-                    <div id="fightHistoryList" class="space-y-3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Certificate Modal -->
-    <div id="certificateModal" class="fixed inset-0 bg-slate-900/80 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-md">
-        <style>
-            @media print {
-                body * { visibility: hidden; }
-                #certificateModal, #certificateModal * { visibility: visible; }
-                #certificateModal { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; background: white; z-index: 9999; }
-                .print-hidden { display: none !important; }
-                .cert-border { border: 4px double #fcd34d !important; border-radius: 1rem !important; }
-            }
-        </style>
-        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full flex flex-col overflow-hidden cert-border border-4 border-double border-amber-300 relative">
-            <div class="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50 shrink-0 print-hidden">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i class="ph ph-certificate text-amber-500 text-2xl"></i> ใบรับรองสายเลือด</h3>
-                <div class="flex gap-2">
-                    <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-medium shadow-sm transition-colors flex items-center gap-2"><i class="ph ph-printer text-lg"></i> พิมพ์ / PDF</button>
-                    <button onclick="closeCertificateModal()" class="text-slate-400 hover:text-slate-700 bg-white border border-slate-200 px-3 py-2 rounded-xl transition-colors"><i class="ph ph-x text-lg"></i></button>
-                </div>
-            </div>
-            
-            <div id="certificateContent" class="p-8 sm:p-12 relative bg-white flex-1">
-                <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none overflow-hidden">
-                    <i class="ph ph-crown text-[24rem]"></i>
-                </div>
-                
-                <div class="text-center mb-8 relative z-10">
-                    <h1 class="text-3xl sm:text-4xl font-bold text-amber-600 mb-2 tracking-wider">CERTIFICATE OF PEDIGREE</h1>
-                    <h2 class="text-lg sm:text-xl text-slate-600 font-medium tracking-widest">ใบรับรองสายเลือด ไก่ชนฟาร์มโปร</h2>
-                    <div class="w-32 h-1 bg-amber-400 mx-auto mt-4 rounded-full"></div>
-                </div>
-
-                <div class="flex flex-col sm:flex-row items-center gap-8 mb-8 relative z-10">
-                    <div class="w-40 h-40 sm:w-56 sm:h-56 rounded-full p-2 border-4 border-amber-200 bg-white shadow-lg mx-auto sm:mx-0 shrink-0">
-                        <img id="certImage" src="" class="w-full h-full object-cover rounded-full border border-amber-100 bg-slate-50" alt="Breeder Photo">
-                    </div>
-                    
-                    <div class="flex-1 w-full text-center sm:text-left">
-                        <p class="text-sm text-amber-600 font-bold uppercase tracking-wider mb-1">ชื่อไก่ (Name)</p>
-                        <p id="certName" class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4 pb-2 border-b-2 border-dotted border-amber-200">-</p>
-                        
-                        <div class="grid grid-cols-2 gap-y-4 gap-x-2">
-                            <div>
-                                <p class="text-xs text-slate-400 font-bold uppercase mb-1">รหัส (Code)</p>
-                                <p id="certCode" class="font-semibold text-lg text-slate-700">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-400 font-bold uppercase mb-1">สายพันธุ์ (Breed)</p>
-                                <p id="certBreed" class="font-semibold text-lg text-slate-700">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-400 font-bold uppercase mb-1">วันเกิด (Birth Date)</p>
-                                <p id="certBirth" class="font-semibold text-lg text-slate-700">-</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-400 font-bold uppercase mb-1">แหล่งที่มา (Source)</p>
-                                <p id="certSource" class="font-semibold text-lg text-slate-700">-</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-8 pt-6 border-t border-amber-100 flex justify-between items-end relative z-10">
-                    <div class="text-center">
-                        <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center text-amber-400 mx-auto border-2 border-amber-200 mb-2">
-                            <i class="ph ph-seal-check text-4xl"></i>
-                        </div>
-                        <p class="text-[10px] sm:text-xs font-bold text-amber-600 uppercase">Certified Authentic</p>
-                    </div>
-                    <div class="text-center pb-2">
-                        <p class="text-slate-400 mb-2 border-b border-slate-300 w-40 sm:w-48 mx-auto"></p>
-                        <p class="font-bold text-slate-700 text-sm sm:text-base">เจ้าของฟาร์ม / ผู้รับรอง</p>
-                        <p class="text-[10px] sm:text-xs text-slate-500 mt-1" id="certPrintDate"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // --- กู้คืน Global Variables และตั้งค่า Firebase ที่หายไป ---
-        const IMGBB_API_KEY = "44f4b9d90c3e5941c5fab200a53c0120"; 
+        // --- Global Variables ---
+        const IMGBB_API_KEY = "44f4b9d90c3e5941c5fab200a53c0120"; // ImgBB API Key ของคุณ
         let currentBatchId = null;
         let notificationTimeout;
         let saveStatusTimeout;
@@ -1219,9 +1108,8 @@
         let currentFinancePeriod = 'monthly';
         let currentBreederView = 'grid';
         let currentGenderFilter = 'all';
-        let imageCropQueue = [];
-        let cropperInstance = null;
 
+        // --- Firebase Config & Auth ---
         const firebaseConfig = {
           apiKey: "AIzaSyDG09PSCkoj7yRW4X6_TXxKBwoQQAHtIYs",
           authDomain: "kaichonfarmpro.firebaseapp.com",
@@ -1242,135 +1130,187 @@
         let currentUser = null;
         let isCloudDataLoaded = false;
         let isGuestMode = false; 
+        
+        // --- CROPPER VARIABLES ---
+        let imageCropQueue = [];
+        let cropperInstance = null;
 
-        // --- อัปเกรดฟังก์ชัน AI Report ตามที่คุณขอ ---
-        async function generateAiReport() {
-            const btn = document.getElementById('btnAiReport');
-            const resultDiv = document.getElementById('aiReportResult');
+        // --- GEMINI AI CONFIG ---
+        const geminiApiKey = ""; // API Key provided by runtime environment
+
+        // Exponential Backoff for API calls
+        async function fetchWithRetry(url, options, retries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return await res.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    console.log(`Gemini API retry ${i + 1}/${retries}...`);
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
+            }
+        }
+
+        async function callGemini(promptText, systemInstruction) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${geminiApiKey}`;
             
-            if (!btn || !resultDiv) return;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            const result = await fetchWithRetry(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            return result.candidates?.[0]?.content?.parts?.[0]?.text || "ไม่สามารถวิเคราะห์ข้อมูลได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
+        }
+
+        // Format basic Markdown to HTML
+        function formatMarkdownToHTML(text) {
+            let html = text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                .replace(/\n\n/g, '</p><p>') // Paragraphs
+                .replace(/\n- (.*?)/g, '<ul><li>$1</li></ul>') // Basic lists
+                .replace(/<\/ul><ul>/g, ''); // Fix list joining
+            
+            // Clean up standalone new lines
+            html = html.replace(/\n/g, '<br>');
+            return `<p>${html}</p>`;
+        }
+
+        // Feature 1: AI Vet Assistant
+        async function analyzeSymptomsWithAI() {
+            const input = document.getElementById('aiSymptomsInput').value.trim();
+            if (!input) {
+                showNotification('กรุณากรอกอาการของไก่ก่อนวิเคราะห์', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('aiAnalyzeBtn');
+            const loadingState = document.getElementById('aiLoadingState');
+            const emptyState = document.getElementById('aiEmptyState');
+            const resultOutput = document.getElementById('aiResultOutput');
 
             btn.disabled = true;
-            btn.innerHTML = '<i class="ph ph-spinner animate-spin text-lg"></i> กำลังให้ AI วิเคราะห์...';
-            resultDiv.innerHTML = '<div class="text-center p-6 text-slate-500"><i class="ph ph-spinner-gap animate-spin text-4xl mb-3 text-emerald-500"></i><p>ระบบ AI กำลังประมวลผลข้อมูลฟาร์มของคุณ<br>และคำนวณต้นทุนแฝง อาจใช้เวลา 10-20 วินาที</p></div>';
-            resultDiv.classList.remove('hidden');
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-xl"></i> กำลังประมวลผล...';
+            
+            emptyState.classList.add('hidden');
+            resultOutput.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+
+            const systemPrompt = `คุณคือสัตวแพทย์และผู้เชี่ยวชาญด้านโรคไก่ชน 
+หน้าที่ของคุณคือวิเคราะห์อาการที่ผู้ใช้แจ้งมา และประเมินความน่าจะเป็นของโรค 
+รูปแบบการตอบ (ใช้ภาษาไทย เข้าใจง่าย):
+1. **โรคที่อาจเป็นไปได้:** (ระบุ 1-3 โรค พร้อมคำอธิบายสั้นๆ)
+2. **การรักษาเบื้องต้น:** (ยาที่ควรใช้ หรือวิธีดูแลเบื้องต้น)
+3. **การป้องกัน/คำแนะนำเพิ่มเติม:** (การแยกไก่ป่วย, การฆ่าเชื้อ ฯลฯ)
+ตอบด้วยข้อมูลกระชับและเป็นประโยชน์ ห้ามยาวเกินไป`;
 
             try {
-                // 1. รวบรวมข้อมูล Breeders
-                const breedersSummary = breedersDataStore.map(b => 
-                    `- ${b.name} (${b.gender === 'male' ? 'พ่อพันธุ์' : 'แม่พันธุ์'}): พันธุ์ ${b.breed || 'ไม่ระบุ'}, สถานะ ${b.status}`
-                ).join('\n');
-
-                // 2. รวบรวมข้อมูล Batches (คอก) พร้อมคำนวณอายุและระยะเวลาการเลี้ยง
-                const today = new Date();
-                const batchesSummary = Object.values(batchesDataStore).map(b => {
-                    const birth = new Date(b.birthDate);
-                    // คำนวณอายุเฉลี่ยของคอก (นับเป็นเดือน)
-                    const ageInMonths = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-                    
-                    let soldChicksData = [];
-                    let aliveCount = 0;
-                    let deadCount = 0;
-                    
-                    if (b.chicks) {
-                        b.chicks.forEach(c => {
-                            if (c.status === 'alive') aliveCount++;
-                            if (c.status === 'dead') deadCount++;
-                            if (c.status === 'sold') {
-                                // คำนวณระยะเวลาที่เลี้ยงจนถึงวันขาย
-                                let monthsKept = ageInMonths;
-                                if (c.saleDate) {
-                                    const sale = new Date(c.saleDate);
-                                    monthsKept = (sale.getFullYear() - birth.getFullYear()) * 12 + (sale.getMonth() - birth.getMonth());
-                                }
-                                soldChicksData.push(`ราคา ${c.salePrice || 0} บาท (เลี้ยงมา ${monthsKept > 0 ? monthsKept : 1} เดือน)`);
-                            }
-                        });
-                    }
-
-                    return `- ${b.name} (พ่อแม่: ${b.parents}): เกิด ${b.birthDate}, อายุคอกปัจจุบัน ${ageInMonths > 0 ? ageInMonths : 1} เดือน, เริ่มต้น ${b.totalChicks} ตัว, รอด ${aliveCount} ตัว, ตาย ${deadCount} ตัว, ขายได้ ${soldChicksData.length} ตัว [รายละเอียดการขาย: ${soldChicksData.join(', ')}]`;
-                }).join('\n');
-
-                // 3. รวบรวมข้อมูล Finance
-                let totalIncome = 0;
-                let totalExpense = 0;
-                const financeSummary = financeDataStore.map(f => {
-                    if (f.type === 'income') totalIncome += f.amount;
-                    if (f.type === 'expense') totalExpense += f.amount;
-                    return `- ${f.date}: ${f.type === 'income' ? 'รับ' : 'จ่าย'} ${f.amount} บาท (${f.note})`;
-                }).join('\n');
-
-                // สร้าง String สรุปข้อมูลส่งให้ AI
-                const dataString = `
-ข้อมูลฟาร์มไก่ชนปัจจุบัน:
---- พ่อแม่พันธุ์ ---
-${breedersSummary || 'ไม่มีข้อมูล'}
-
---- ข้อมูลคอกลูกไก่ ---
-${batchesSummary || 'ไม่มีข้อมูล'}
-
---- ข้อมูลบัญชี (รายรับ-รายจ่ายที่บันทึกไว้) ---
-${financeSummary || 'ไม่มีข้อมูลบัญชี'}
-รวมรายรับที่บันทึก: ${totalIncome} บาท
-รวมรายจ่ายที่บันทึก: ${totalExpense} บาท
-                `;
-
-                // System Prompt ที่ปรับปรุงใหม่สำหรับการคำนวณต้นทุนแฝง
-                const systemPrompt = `คุณคือผู้เชี่ยวชาญด้านเศรษฐศาสตร์ฟาร์มไก่ชน
-หน้าที่ของคุณคือวิเคราะห์กำไร/ขาดทุนที่แท้จริงของแต่ละคอก (Batch) โดยใช้ข้อมูลที่ส่งให้
-
-กฎสำคัญ: หากข้อมูล 'รายจ่าย (Expense)' ในระบบดูน้อยผิดปกติ หรือไม่มีเลย ให้คุณ 'ประเมินค่าอาหารและต้นทุนแฝงเฉลี่ย' ตามหลักความเป็นจริงของการเลี้ยงไก่ชน (เช่น ลูกไก่แรกเกิดถึง 2 เดือน ใช้ค่าอาหารประมาณ 30-50 บาท/ตัว/เดือน, ไก่รุ่น 3-6 เดือน ใช้ประมาณ 80-120 บาท/ตัว/เดือน) นำมาคูณกับอายุไก่(หรือระยะเวลาที่เลี้ยงก่อนขาย)และจำนวนไก่ในคอกนั้นๆ เพื่อหา 'ต้นทุนประเมิน'
-
-รูปแบบการตอบ (ภาษาไทย จัดหน้าอ่านง่ายด้วย HTML tags ย่อหน้าและตัวหนา หลีกเลี่ยง Markdown แบบ **):
-<ol>
-<li class="mb-2"><strong>สรุปภาพรวมฟาร์ม:</strong> สถานะการเงินเบื้องต้น และอัตราการรอดโดยรวม</li>
-<li class="mb-2"><strong>วิเคราะห์ความคุ้มค่ารายคอก:</strong> ระบุว่าคอกไหนทำกำไรสูงสุด (นำรายรับ ลบด้วย ต้นทุนจริง+ต้นทุนประเมิน) และแม่พันธุ์ตัวไหนให้ผลผลิตดีที่สุด</li>
-<li class="mb-2"><strong>รายการประเมินต้นทุนแฝง:</strong> แสดงการคำนวณต้นทุนแฝง (ค่าอาหาร/ค่ายา/ค่าไฟ) ที่คุณประเมินขึ้นมา เพื่อให้เกษตรกรเห็นภาพชัดเจนว่ามีต้นทุนที่มองไม่เห็นเท่าไหร่</li>
-<li class="mb-2"><strong>คำแนะนำ:</strong> 2-3 ข้อ เพื่อลดต้นทุน หรือเพิ่มกำไร</li>
-</ol>`;
-
-                const apiKey = 'AIzaSyArvR11oj7UBWL4a-leMIh34P0vX2A4SXs';
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-                const requestBody = {
-                    contents: [
-                        { role: "user", parts: [{ text: systemPrompt + "\n\nวิเคราะห์ข้อมูลต่อไปนี้:\n" + dataString }] }
-                    ],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1000,
-                    }
-                };
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || 'API Error');
-                }
-
-                const responseData = await response.json();
+                const responseText = await callGemini(`อาการของไก่: ${input}`, systemPrompt);
+                resultOutput.innerHTML = formatMarkdownToHTML(responseText);
                 
-                if (responseData.candidates && responseData.candidates[0].content.parts[0].text) {
-                    let aiText = responseData.candidates[0].content.parts[0].text;
-                    aiText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                    aiText = aiText.replace(/\n/g, '<br>');
-                    
-                    resultDiv.innerHTML = `<div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-sm text-slate-700 leading-relaxed">${aiText}</div>`;
-                } else {
-                    throw new Error('ไม่สามารถอ่านข้อมูลจาก AI ได้');
-                }
-
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                resultOutput.classList.remove('hidden');
             } catch (error) {
-                console.error("AI Report Error:", error);
-                resultDiv.innerHTML = `<div class="p-4 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 text-sm"><i class="ph ph-warning-circle"></i> เกิดข้อผิดพลาดในการวิเคราะห์ข้อมูล: ${error.message} <br><br>กรุณาลองใหม่อีกครั้ง หรือตรวจสอบ API Key</div>`;
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                emptyState.classList.remove('hidden');
+                showNotification('ไม่สามารถเชื่อมต่อ AI ได้ กรุณาลองอีกครั้ง', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="ph ph-magic-wand text-lg"></i> สร้างรายงานวิเคราะห์ด้วย AI';
+                btn.innerHTML = '✨ วิเคราะห์อาการด้วย AI';
+            }
+        }
+
+        // Feature 2: AI Farm Report Summary
+        async function generateAiReport() {
+            const container = document.getElementById('aiReportContainer');
+            const loadingState = document.getElementById('aiReportLoadingState');
+            const resultArea = document.getElementById('aiReportResult');
+            
+            container.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+
+            // Gather Data
+            const tMale = breedersDataStore.filter(b => b.gender === 'male' && b.status === 'alive').length;
+            const tFemale = breedersDataStore.filter(b => b.gender === 'female' && b.status === 'alive').length;
+            
+            let totalAlive = 0, totalSold = 0, totalDead = 0;
+            for (const id in batchesDataStore) {
+                totalAlive += batchesDataStore[id].aliveChicks || 0;
+                totalSold += batchesDataStore[id].soldChicks || 0;
+                totalDead += batchesDataStore[id].deadChicks || 0;
+            }
+
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            let monthInc = 0, monthExp = 0;
+            financeDataStore.forEach(t => {
+                const d = new Date(t.date);
+                if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                    if (t.type === 'income') monthInc += t.amount;
+                    else monthExp += t.amount;
+                }
+            });
+
+            const dataString = `
+ข้อมูลฟาร์มปัจจุบัน:
+- พ่อพันธุ์: ${tMale} ตัว
+- แม่พันธุ์: ${tFemale} ตัว
+- ลูกไก่เลี้ยงอยู่: ${totalAlive} ตัว
+- ลูกไก่ตายสะสม: ${totalDead} ตัว
+- ลูกไก่ขายแล้วสะสม: ${totalSold} ตัว
+การเงินเดือนนี้:
+- รายรับ: ${monthInc} บาท
+- รายจ่าย: ${monthExp} บาท
+- กำไรสุทธิ: ${monthInc - monthExp} บาท
+            `;
+
+            const systemPrompt = `คุณคือที่ปรึกษาธุรกิจฟาร์มไก่ชนมืออาชีพ 
+ฉันจะส่งข้อมูลสถิติฟาร์มให้คุณ โปรดทำดังนี้:
+1. **สรุปภาพรวม:** วิเคราะห์สั้นๆ ว่าสถานการณ์ฟาร์มตอนนี้เป็นอย่างไร (ดี, น่าเป็นห่วง, ต้องปรับปรุง)
+2. **จุดเด่น/จุดด้อย:** ระบุจากตัวเลข (เช่น อัตราการตายน้อย/เยอะ, กำไร/ขาดทุน)
+3. **คำแนะนำเพิ่มกำไร/ลดรายจ่าย:** ให้ไอเดีย 2-3 ข้อที่ทำได้จริงกับฟาร์มไก่ชน
+ตอบเป็นภาษาไทย กระชับ อ่านง่าย`;
+
+            try {
+                const responseText = await callGemini(dataString, systemPrompt);
+                resultArea.innerHTML = formatMarkdownToHTML(responseText);
+                
+                loadingState.classList.add('hidden');
+                loadingState.classList.remove('flex');
+                resultArea.classList.remove('hidden');
+            } catch (error) {
+                container.classList.add('hidden');
+                showNotification('เกิดข้อผิดพลาดในการวิเคราะห์รายงาน', 'error');
+            }
+        }
+
+        // --- Layout JS ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
             }
         }
 
@@ -1380,6 +1320,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                 'breeding': 'การจัดการพ่อแม่พันธุ์',
                 'chicks': 'การจัดการคอกลูกไก่',
                 'vaccineCalendarSection': 'โปรแกรมวัคซีนและสุขภาพ',
+                'aiAssistantSection': 'ผู้ช่วยสัตวแพทย์ AI',
                 'finance': 'บัญชีฟาร์ม',
                 'reports': 'รายงานสถิติเชิงลึก',
                 'backupRestore': 'ระบบสำรองข้อมูล'
@@ -1400,14 +1341,22 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             
             // Reset nav buttons normal state
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
+                // Clear specific colored classes
+                btn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold', 'text-purple-700', 'bg-purple-50');
+                if(!btn.classList.contains('text-purple-700')) { // don't override the AI button default color if not selected
+                    btn.classList.add('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
+                }
             });
             
             // Set active nav button state
             if (buttonElement) {
-                buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium');
-                buttonElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
+                if(sectionName === 'aiAssistantSection') {
+                    buttonElement.classList.add('bg-purple-50', 'text-purple-700', 'border-r-4', 'border-purple-600', 'font-semibold');
+                    buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent');
+                } else {
+                    buttonElement.classList.remove('text-slate-600', 'hover:bg-slate-50', 'border-transparent', 'font-medium', 'text-purple-700', 'bg-purple-50');
+                    buttonElement.classList.add('bg-emerald-50', 'text-emerald-700', 'border-r-4', 'border-emerald-600', 'font-semibold');
+                }
             }
 
             if(window.innerWidth < 1024) {
@@ -1423,6 +1372,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             if (sectionName === 'finance') filterFinance(currentFinancePeriod);
         }
 
+        // --- Notification & Modals ---
         function showNotification(message, type = 'success') {
             const toast = document.getElementById('notification-toast');
             const messageEl = document.getElementById('notification-message');
@@ -1451,35 +1401,12 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             }, 3000);
         }
 
-        let lightboxImageArray = [];
-        let currentLightboxIndex = 0;
-
-        function openLightbox(src, imageArray = [], startIndex = 0) {
+        function openLightbox(src) {
             const modal = document.getElementById('imageLightboxModal');
             const img = document.getElementById('lightboxImage');
-            const prevBtn = document.getElementById('prevLightboxBtn');
-            const nextBtn = document.getElementById('nextLightboxBtn');
-            const counter = document.getElementById('lightboxCounter');
-
-            lightboxImageArray = imageArray;
-            currentLightboxIndex = startIndex;
-
             img.src = src;
             modal.classList.remove('hidden');
             setTimeout(() => img.classList.replace('scale-95', 'scale-100'), 10);
-
-            if (lightboxImageArray.length > 1) {
-                if (prevBtn) prevBtn.classList.remove('hidden');
-                if (nextBtn) nextBtn.classList.remove('hidden');
-                if (counter) {
-                    counter.classList.remove('hidden');
-                    counter.textContent = `${currentLightboxIndex + 1} / ${lightboxImageArray.length}`;
-                }
-            } else {
-                if (prevBtn) prevBtn.classList.add('hidden');
-                if (nextBtn) nextBtn.classList.add('hidden');
-                if (counter) counter.classList.add('hidden');
-            }
         }
 
         function closeLightbox() {
@@ -1487,45 +1414,13 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             const img = document.getElementById('lightboxImage');
             img.classList.replace('scale-100', 'scale-95');
             setTimeout(() => modal.classList.add('hidden'), 300);
-            lightboxImageArray = [];
         }
 
         function openBreederMainPhoto(id) {
             const b = breedersDataStore.find(x => x.id === id);
             if (b && b.photos && b.photos.length > 0) {
-                const imgArray = b.photos.map(p => p.data || p.url);
-                openLightbox(imgArray[0], imgArray, 0);
+                openLightbox(b.photos[0].data);
             }
-        }
-
-        function changeLightboxImage(direction) {
-            if (lightboxImageArray.length <= 1) return;
-            currentLightboxIndex += direction;
-            
-            if (currentLightboxIndex < 0) currentLightboxIndex = lightboxImageArray.length - 1;
-            if (currentLightboxIndex >= lightboxImageArray.length) currentLightboxIndex = 0;
-
-            const img = document.getElementById('lightboxImage');
-            img.src = lightboxImageArray[currentLightboxIndex];
-
-            const counter = document.getElementById('lightboxCounter');
-            if (counter) counter.textContent = `${currentLightboxIndex + 1} / ${lightboxImageArray.length}`;
-        }
-
-        function showConfirmation(title, message, onConfirm) {
-            const modal = document.getElementById('confirmationModal');
-            document.getElementById('confirmationTitle').textContent = title;
-            document.getElementById('confirmationMessage').textContent = message;
-            modal.classList.remove('hidden');
-
-            const okBtn = document.getElementById('confirmOkBtn');
-            const cancelBtn = document.getElementById('confirmCancelBtn');
-
-            const newOkBtn = okBtn.cloneNode(true);
-            okBtn.parentNode.replaceChild(newOkBtn, okBtn);
-
-            newOkBtn.addEventListener('click', () => { onConfirm(); modal.classList.add('hidden'); });
-            cancelBtn.onclick = () => { modal.classList.add('hidden'); };
         }
 
         // --- Image Compression Function ---
@@ -1878,16 +1773,25 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
         vaccineCalendar = new ChickenVaccinationCalendar();
         window.vaccineCalendar = vaccineCalendar;
 
+        function showConfirmation(title, message, onConfirm) {
+            const modal = document.getElementById('confirmationModal');
+            document.getElementById('confirmationTitle').textContent = title;
+            document.getElementById('confirmationMessage').textContent = message;
+            modal.classList.remove('hidden');
+
+            const okBtn = document.getElementById('confirmOkBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            const newOkBtn = okBtn.cloneNode(true);
+            okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+
+            newOkBtn.addEventListener('click', () => { onConfirm(); modal.classList.add('hidden'); });
+            cancelBtn.onclick = () => { modal.classList.add('hidden'); };
+        }
+
         // --- Core Application Initialization ---
         document.addEventListener('DOMContentLoaded', function() {
             vaccineCalendar.init();
-            
-            // ลงทะเบียน Service Worker สำหรับ PWA (แอปมือถือ)
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('✅ PWA Service Worker Registered!'))
-                    .catch(err => console.warn('⚠️ PWA Service Worker Setup Failed:', err));
-            }
             
             const today = new Date();
             const dateEl = document.getElementById('currentDate');
@@ -2196,19 +2100,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             if (grid) {
                 grid.innerHTML = '';
                 
-                const searchTerm = document.getElementById('batchSearchInput')?.value.toLowerCase() || '';
-
-                const batchesArray = Object.values(batchesDataStore).filter(b => {
-                    if (!searchTerm) return true;
-                    
-                    const nameMatch = b.name && b.name.toLowerCase().includes(searchTerm);
-                    const parentsMatch = b.parents && b.parents.toLowerCase().includes(searchTerm);
-                    const fBreedMatch = b.fatherBreed && b.fatherBreed.toLowerCase().includes(searchTerm);
-                    const mBreedMatch = b.motherBreed && b.motherBreed.toLowerCase().includes(searchTerm);
-                    
-                    return nameMatch || parentsMatch || fBreedMatch || mBreedMatch;
-                });
-                
+                const batchesArray = Object.values(batchesDataStore);
                 batchesArray.sort((a, b) => {
                     const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
                     const bAlive = b.chicks ? b.chicks.filter(c => c.status === 'alive').length : 0;
@@ -2219,11 +2111,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     return new Date(a.birthDate) - new Date(b.birthDate);
                 });
                 
-                if (batchesArray.length === 0) {
-                     grid.innerHTML = '<div class="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 font-medium">ไม่พบคอกไก่ที่ค้นหา</div>';
-                } else {
-                     batchesArray.forEach(b => grid.appendChild(createBatchCard(b)));
-                }
+                batchesArray.forEach(b => grid.appendChild(createBatchCard(b)));
             }
             
             renderBreeders(); 
@@ -2272,7 +2160,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     e.preventDefault();
                     const breederName = document.getElementById('breederName').value;
                     const price = parseFloat(document.getElementById('breederPrice').value) || 0;
-                    const newBreeder = { id: `breeder-${Date.now()}`, name: breederName, code: document.getElementById('breederCode').value, gender: document.getElementById('breederGender').value, breed: document.getElementById('breederBreed').value, birthDate: document.getElementById('breederBirthDate').value, source: document.getElementById('breederSource').value, photos: [], status: 'alive' };
+                    const newBreeder = { id: `breeder-${Date.now()}`, name: breederName, code: document.getElementById('breederCode').value, gender: document.getElementById('breederGender').value, breed: document.getElementById('breederBreed').value, source: document.getElementById('breederSource').value, photos: [], status: 'alive' };
                     if (price > 0) {
                         const transactionId = `trans-${Date.now()}`;
                         financeDataStore.push({ id: transactionId, type: 'expense', category: 'chicken-purchase', amount: price, note: `ซื้อไก่พันธุ์: ${breederName}`, date: new Date().toISOString().split('T')[0] });
@@ -2330,7 +2218,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                          breeder.name = document.getElementById('editBreederName').value;
                          breeder.code = document.getElementById('editBreederCode').value;
                          breeder.breed = document.getElementById('editBreederBreed').value;
-                         breeder.birthDate = document.getElementById('editBreederBirthDate').value;
                          breeder.source = document.getElementById('editBreederSource').value;
                          breeder.status = newStatus;
                          
@@ -2351,8 +2238,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     const newBatchData = {
                         id: newBatchId, name: `คอกที่ ${Object.keys(batchesDataStore).length + 1}`,
                         parents: `${document.getElementById('fatherSelect').value} x ${document.getElementById('motherSelect').value}`,
-                        fatherBreed: document.getElementById('fatherBreed')?.value || '',
-                        motherBreed: document.getElementById('motherBreed')?.value || '',
                         birthDate: birthDate, 
                         totalChicks: count,
                         note: note,
@@ -2373,49 +2258,16 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                 transactionForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     const categorySelect = document.getElementById('transactionCategory');
-                    const editId = this.dataset.editId;
-                    
-                    const amount = parseFloat(document.getElementById('transactionAmount').value);
-                    const type = document.getElementById('transactionType').value;
-                    const category = categorySelect.value;
-                    const note = document.getElementById('transactionNote').value.trim() || categorySelect.options[categorySelect.selectedIndex].text;
-                    const date = document.getElementById('transactionDate').value;
-
-                    if (editId) {
-                        // กรณีแก้ไขรายการเดิม
-                        const index = financeDataStore.findIndex(t => t.id === editId);
-                        if (index > -1) {
-                            financeDataStore[index].type = type;
-                            financeDataStore[index].category = category;
-                            financeDataStore[index].amount = amount;
-                            financeDataStore[index].note = note;
-                            financeDataStore[index].date = date;
-                        }
-                        showNotification('อัปเดตรายการสำเร็จ!', 'success');
-                        
-                        // ล้างสถานะการแก้ไข และคืนค่าปุ่มกลับเป็นสีดำเหมือนเดิม
-                        delete this.dataset.editId;
-                        const submitBtn = this.querySelector('button[type="submit"]');
-                        submitBtn.textContent = 'บันทึกรายการ';
-                        submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                        submitBtn.classList.add('bg-slate-800', 'hover:bg-slate-900');
-                    } else {
-                        // กรณีสร้างรายการใหม่
-                        const newTransaction = {
-                            id: `trans-${Date.now()}`, type: type, category: category,
-                            amount: amount, note: note, date: date
-                        };
-                        financeDataStore.push(newTransaction);
-                        showNotification('บันทึกรายการสำเร็จ!', 'success');
-                    }
-                    
-                    filterFinance(currentFinancePeriod); 
-                    saveData();
-                    updateGlobalStatistics(); // อัปเดตสถิติกำไรขาดทุนทันที
-                    
-                    this.reset();
-                    document.getElementById('transactionDate').valueAsDate = new Date(); 
-                    updateTransactionCategories();
+                    const newTransaction = {
+                        id: `trans-${Date.now()}`, type: document.getElementById('transactionType').value, category: categorySelect.value,
+                        amount: parseFloat(document.getElementById('transactionAmount').value),
+                        note: document.getElementById('transactionNote').value.trim() || categorySelect.options[categorySelect.selectedIndex].text,
+                        date: document.getElementById('transactionDate').value
+                    };
+                    financeDataStore.push(newTransaction);
+                    filterFinance(currentFinancePeriod); saveData();
+                    showNotification('บันทึกรายการสำเร็จ!', 'success'); this.reset();
+                    document.getElementById('transactionDate').valueAsDate = new Date(); updateTransactionCategories();
                 });
             }
             
@@ -2426,8 +2278,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     const batch = batchesDataStore[currentBatchId];
                     if (batch) {
                         batch.parents = `${document.getElementById('editBatchFatherSelect').value} x ${document.getElementById('editBatchMotherSelect').value}`;
-                        batch.fatherBreed = document.getElementById('editBatchFatherBreed')?.value || '';
-                        batch.motherBreed = document.getElementById('editBatchMotherBreed')?.value || '';
                         batch.birthDate = document.getElementById('editBatchBirthDate').value;
                         batch.note = document.getElementById('editBatchNote').value;
                         const newChicksCount = parseInt(document.getElementById('addChickCount').value) || 0;
@@ -2454,8 +2304,7 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     const originalStatus = chick.status;
                     const status = document.getElementById('chickStatus').value;
                     const code = document.getElementById('chickCode').value;
-                    const name = document.getElementById('chickName').value;
-                    const statusData = { gender: document.getElementById('chickGender').value, code: code, name: name };
+                    const statusData = { gender: document.getElementById('chickGender').value, code: code };
                     let notificationMessage = `บันทึกข้อมูลสำเร็จ`;
 
                     if (originalStatus === 'sold' && status !== 'sold') {
@@ -2499,34 +2348,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     showNotification(notificationMessage, 'success');
                 });
             }
-
-            const fightRecordForm = document.getElementById('fightRecordForm');
-            if (fightRecordForm) {
-                fightRecordForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const breederId = document.getElementById('currentFightBreederId').value;
-                    const breeder = breedersDataStore.find(b => b.id === breederId);
-                    if (!breeder) return;
-
-                    if (!breeder.fights) breeder.fights = [];
-                    
-                    const newFight = {
-                        id: 'fight-' + Date.now(),
-                        date: document.getElementById('fightDate').value,
-                        location: document.getElementById('fightLocation').value,
-                        result: document.getElementById('fightResult').value,
-                        prize: parseFloat(document.getElementById('fightPrize').value) || 0
-                    };
-
-                    breeder.fights.push(newFight);
-                    saveData();
-                    renderFightHistory(breederId);
-                    
-                    document.getElementById('fightLocation').value = '';
-                    document.getElementById('fightPrize').value = '';
-                    showNotification('บันทึกสถิติสำเร็จ', 'success');
-                });
-            }
         }
 
         // --- Render Functions ---
@@ -2538,44 +2359,18 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             const showSold = document.getElementById('statusSold')?.checked ?? true;
             const showDead = document.getElementById('statusDead')?.checked ?? true;
             
-            const searchTerm = document.getElementById('breederSearchInput')?.value.toLowerCase() || '';
-
             const filteredBreeders = breedersDataStore.filter(b => {
                 const genderMatch = currentGenderFilter === 'all' || b.gender === currentGenderFilter;
                 let statusMatch = false;
                 if (b.status === 'alive' && showAlive) statusMatch = true;
                 if (b.status === 'sold' && showSold) statusMatch = true;
                 if (b.status === 'dead' && showDead) statusMatch = true;
-                
-                const searchMatch = !searchTerm || 
-                    (b.name && b.name.toLowerCase().includes(searchTerm)) ||
-                    (b.code && b.code.toLowerCase().includes(searchTerm)) ||
-                    (b.breed && b.breed.toLowerCase().includes(searchTerm));
-
-                return genderMatch && statusMatch && searchMatch;
+                return genderMatch && statusMatch;
             });
             
             if (currentBreederView === 'grid') {
                 grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6';
                 filteredBreeders.forEach(breeder => {
-                    let ageText = 'ไม่ระบุ';
-                    if (breeder.birthDate) {
-                        const bDate = new Date(breeder.birthDate);
-                        const now = new Date();
-                        let monthsDiff = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
-                        if (now.getDate() < bDate.getDate()) monthsDiff--;
-                        if (monthsDiff < 0) monthsDiff = 0;
-                        const yrs = Math.floor(monthsDiff / 12);
-                        const mos = monthsDiff % 12;
-                        if (yrs === 0 && mos === 0) ageText = 'ไม่ถึง 1 เดือน';
-                        else {
-                            ageText = '';
-                            if (yrs > 0) ageText += `${yrs} ปี `;
-                            if (mos > 0) ageText += `${mos} เดือน`;
-                            ageText = ageText.trim();
-                        }
-                    }
-
                     const card = document.createElement('div');
                     card.className = `bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden card-hover flex flex-col ${breeder.status !== 'alive' ? 'opacity-70 grayscale-[30%]' : ''}`;
                     card.dataset.id = breeder.id;
@@ -2598,9 +2393,8 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                         </div>
                          <div class="p-5 flex-1 flex flex-col">
                              <h3 class="font-bold text-lg text-slate-800 mb-1">${breeder.name}</h3>
-                             <p class="text-slate-500 text-sm mb-4 font-medium flex items-center gap-1 flex-wrap"><i class="ph ph-hash"></i> ${breeder.code || 'ไม่มีรหัส'} <span class="mx-1 text-slate-300">•</span> <i class="ph ph-dna"></i> ${breeder.breed || 'ไม่ระบุ'} <span class="mx-1 text-slate-300">•</span> <i class="ph ph-calendar"></i> อายุ: ${ageText}</p>
+                             <p class="text-slate-500 text-sm mb-4 font-medium flex items-center gap-1"><i class="ph ph-hash"></i> ${breeder.code || 'ไม่มีรหัส'} <span class="mx-1">•</span> <i class="ph ph-dna"></i> ${breeder.breed || 'ไม่ระบุ'}</p>
                              <div class="mt-auto grid grid-cols-3 gap-2 border-t border-slate-100 pt-4">
-                                <button onclick="openFightRecordModal('${breeder.id}')" class="col-span-3 bg-rose-50 hover:bg-rose-100 text-rose-700 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"><i class="ph ph-sword text-lg"></i> สถิติการชน</button>
                                 <button onclick="editBreeder(this)" class="bg-slate-50 hover:bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-pencil-simple"></i> แก้ไข</button>
                                 <button onclick="openBreederPhotoModal('${breeder.id}')" class="bg-slate-50 hover:bg-slate-100 text-slate-700 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-image"></i> รูปภาพ</button>
                                 <button onclick="deleteBreeder('${breeder.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 py-2 rounded-lg text-sm font-medium transition"><i class="ph ph-trash"></i> ลบ</button>
@@ -2611,24 +2405,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             } else {
                 grid.className = 'space-y-3';
                  filteredBreeders.forEach(breeder => {
-                    let ageText = 'ไม่ระบุ';
-                    if (breeder.birthDate) {
-                        const bDate = new Date(breeder.birthDate);
-                        const now = new Date();
-                        let monthsDiff = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
-                        if (now.getDate() < bDate.getDate()) monthsDiff--;
-                        if (monthsDiff < 0) monthsDiff = 0;
-                        const yrs = Math.floor(monthsDiff / 12);
-                        const mos = monthsDiff % 12;
-                        if (yrs === 0 && mos === 0) ageText = 'ไม่ถึง 1 เดือน';
-                        else {
-                            ageText = '';
-                            if (yrs > 0) ageText += `${yrs} ปี `;
-                            if (mos > 0) ageText += `${mos} เดือน`;
-                            ageText = ageText.trim();
-                        }
-                    }
-
                     const listItem = document.createElement('div');
                     listItem.className = `bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-4 ${breeder.status !== 'alive' ? 'opacity-70' : ''}`;
                     listItem.dataset.id = breeder.id;
@@ -2650,11 +2426,9 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                                 <h3 class="font-bold text-slate-800 text-lg">${breeder.name}</h3>
                                 ${statusBadge}
                             </div>
-                            <p class="text-sm text-slate-500 font-medium">รหัส: ${breeder.code || '-'} | พันธุ์: ${breeder.breed || '-'} | อายุ: ${ageText}</p>
+                            <p class="text-sm text-slate-500 font-medium">รหัส: ${breeder.code || '-'} | พันธุ์: ${breeder.breed || '-'}</p>
                         </div>
                         <div class="flex gap-2">
-                           <button onclick="openFightRecordModal('${breeder.id}')" class="bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-600 p-2.5 rounded-xl transition" title="สถิติการชน"><i class="ph ph-sword text-lg"></i></button>
-                           <button onclick="printBreederProfile('${breeder.id}')" class="bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-600 p-2.5 rounded-xl transition" title="พิมพ์ประวัติ"><i class="ph ph-printer text-lg"></i></button>
                            <button onclick="editBreeder(this)" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 p-2.5 rounded-xl transition" title="แก้ไข"><i class="ph ph-pencil-simple text-lg"></i></button>
                            <button onclick="openBreederPhotoModal('${breeder.id}')" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 p-2.5 rounded-xl transition" title="รูปภาพ"><i class="ph ph-image text-lg"></i></button>
                         </div>
@@ -2743,28 +2517,16 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                 document.querySelectorAll('.finance-filter-btn').forEach(b => { b.classList.remove('bg-emerald-600', 'text-white'); b.classList.add('text-slate-600', 'bg-transparent'); });
                 btn.classList.add('bg-emerald-600', 'text-white'); btn.classList.remove('text-slate-600', 'bg-transparent');
             }
-            
-            const today = new Date(); 
-            today.setHours(0,0,0,0);
-            
-            // แยกตัวแปร weekAgo เพื่อป้องกันบัคการแก้ค่า today ซ้ำๆ ในลูป
-            const weekAgo = new Date(today);
-            weekAgo.setDate(weekAgo.getDate() - 7);
-
+            const today = new Date(); today.setHours(0,0,0,0);
             let filtered = financeDataStore.filter(t => {
                 const date = new Date(t.date);
-                date.setHours(0,0,0,0); // เคลียร์เวลาเพื่อเทียบแค่วันที่
-                
-                if (period === 'daily') return date.getTime() === today.getTime();
-                if (period === 'weekly') return date >= weekAgo;
-                if (period === 'monthly') return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-                if (period === 'yearly') return date.getFullYear() === today.getFullYear();
+                if (period === 'daily') return date.setHours(0,0,0,0) === today.getTime();
+                if (period === 'weekly') return date >= new Date(today.setDate(today.getDate() - 7));
+                if (period === 'monthly') return date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear();
+                if (period === 'yearly') return date.getFullYear() === new Date().getFullYear();
                 return true;
             });
-            
-            renderTransactionList(filtered); 
-            updateFinanceSummary(filtered); 
-            renderFinanceChart(filtered, period);
+            renderTransactionList(filtered); updateFinanceSummary(filtered); renderFinanceChart(filtered, period);
         }
 
         function updateChickVisuals(chickId) {
@@ -2781,7 +2543,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                 case 'alive': statusBadge.classList.add('bg-blue-100', 'text-blue-700'); statusBadge.textContent = 'มีชีวิต'; break;
                 case 'sold': statusBadge.classList.add('bg-emerald-100', 'text-emerald-700'); statusBadge.textContent = 'ขายแล้ว'; break;
                 case 'dead': statusBadge.classList.add('bg-rose-100', 'text-rose-700'); statusBadge.textContent = 'ตาย'; break;
-                case 'promoted': statusBadge.classList.add('bg-amber-100', 'text-amber-700'); statusBadge.textContent = '👑 เลื่อนขั้นแล้ว'; break;
             }
 
             const iconContainer = chickElement.querySelector('.image-container');
@@ -2811,14 +2572,9 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
                     el.className = 'relative group bg-slate-50 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer border-2 border-transparent hover:border-emerald-500 transition-all card-shadow';
                     el.dataset.chickId = chick.id;
                     el.onclick = () => openChickUpdateModal(el);
-                    
-                    const displayName = chick.name ? chick.name : (chick.code || `#${chick.id}`);
-                    const codeDisplay = (chick.name && chick.code) ? `<span class="text-xs text-slate-500 mb-2">${chick.code}</span>` : '';
-
                     el.innerHTML = `
                         <div class="image-container w-16 h-16 sm:w-20 sm:h-20 mb-3 flex items-center justify-center rounded-xl overflow-hidden transition-all"></div>
-                        <span class="text-sm font-bold text-slate-800 block text-center truncate w-full px-2 ${!codeDisplay ? 'mb-2' : ''}">${displayName}</span>
-                        ${codeDisplay}
+                        <span class="text-sm font-bold text-slate-800 block mb-2">${chick.code || `#${chick.id}`}</span>
                         <div class="status-badge"></div>
                     `;
                     gallery.appendChild(el);
@@ -2831,90 +2587,21 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             const list = document.getElementById('transactionList');
             if(!list) return;
             list.innerHTML = '';
-            
-            if (transactions.length === 0) { 
-                list.innerHTML = '<div class="text-center text-slate-400 py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">ไม่มีรายการในช่วงเวลานี้</div>'; 
-                return; 
-            }
-
-            // 1. เรียงลำดับรายการจากวันที่ใหม่สุดไปเก่าสุด
-            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            // 2. จัดกลุ่มรายการตามวันที่
-            const groupedData = {};
-            sortedTransactions.forEach(trans => {
-                if (!groupedData[trans.date]) {
-                    groupedData[trans.date] = { items: [], dailyTotal: 0 };
-                }
-                groupedData[trans.date].items.push(trans);
-                
-                // คำนวณยอดรวมรายวัน
-                if (trans.type === 'income') {
-                    groupedData[trans.date].dailyTotal += trans.amount;
-                } else {
-                    groupedData[trans.date].dailyTotal -= trans.amount;
-                }
-            });
-
-            // 3. สร้าง HTML สำหรับแสดงผล
-            let html = '';
-            for (const date in groupedData) {
-                const group = groupedData[date];
-                const dateObj = new Date(date);
-                const dateStr = dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
-                
-                // กำหนดสีและเครื่องหมายของยอดรวมรายวัน
-                const totalColor = group.dailyTotal > 0 ? 'text-emerald-600' : (group.dailyTotal < 0 ? 'text-rose-600' : 'text-slate-500');
-                const totalSign = group.dailyTotal > 0 ? '+' : '';
-
-                // ส่วน Header วันที่
-                html += `
-                    <div class="mt-6 mb-3 first:mt-0 flex justify-between items-end border-b border-slate-200 pb-2 px-1">
-                        <h4 class="font-bold text-slate-700 text-sm flex items-center gap-2">
-                            <i class="ph ph-calendar-blank text-slate-400 text-lg"></i> ${dateStr}
-                        </h4>
-                        <div class="text-right">
-                            <p class="text-[10px] text-slate-400 font-semibold mb-0.5">ยอดรวมสุทธิ</p>
-                            <span class="text-sm font-bold ${totalColor}">${totalSign}฿${group.dailyTotal.toLocaleString()}</span>
+            if (transactions.length === 0) { list.innerHTML = '<div class="text-center text-slate-400 py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">ไม่มีรายการในช่วงเวลานี้</div>'; return; }
+            transactions.slice().reverse().forEach(trans => {
+                const isInc = trans.type === 'income';
+                list.innerHTML += `
+                    <div class="flex justify-between items-center p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${isInc ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}"><i class="ph ${isInc ? 'ph-arrow-down-left' : 'ph-arrow-up-right'} text-xl"></i></div>
+                            <div><p class="font-bold text-slate-800">${trans.note}</p><p class="text-xs text-slate-500 font-medium">${new Date(trans.date).toLocaleDateString('th-TH')}</p></div>
                         </div>
-                    </div>
-                    <div class="space-y-2">
-                `;
-
-                // ส่วนรายการย่อยในวันนั้นๆ
-                group.items.forEach(trans => {
-                    const isInc = trans.type === 'income';
-                    // ปรับ UI คล้ายแอปธนาคาร: สะอาดตา และซ่อนปุ่มลบไว้จนกว่าจะ Hover (บนคอมฯ)
-                    html += `
-                        <div class="flex justify-between items-center p-3.5 rounded-xl border border-slate-100 bg-white hover:border-slate-300 hover:shadow-sm transition-all group">
-                            <div class="flex items-center gap-3 sm:gap-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isInc ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
-                                    <i class="ph ${isInc ? 'ph-arrow-down-left' : 'ph-arrow-up-right'} text-xl"></i>
-                                </div>
-                                <div>
-                                    <p class="font-bold text-slate-800 text-sm sm:text-base">${trans.note}</p>
-                                    <p class="text-xs text-slate-400 font-medium mt-0.5">${isInc ? 'รายรับ' : 'รายจ่าย'} ${trans.category && trans.category !== 'other' ? '• ' + getCategoryName(trans.category) : ''}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 sm:gap-3">
-                                <span class="font-bold sm:text-lg tracking-tight ${isInc ? 'text-emerald-600' : 'text-rose-600'}">${isInc ? '+' : '-'}฿${trans.amount.toLocaleString()}</span>
-                                <button onclick="deleteTransaction('${trans.id}')" class="text-slate-300 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors opacity-100 sm:opacity-0 sm:group-hover:opacity-100" title="ลบรายการ">
-                                    <i class="ph ph-trash text-lg"></i>
-                                </button>
-                            </div>
-                        </div>`;
-                });
-
-                html += `</div>`; // ปิดกล่อง space-y-2
-            }
-
-            list.innerHTML = html;
-        }
-
-        // ฟังก์ชันช่วยเหลือสำหรับแปลงรหัส Category เป็นชื่อภาษาไทย
-        function getCategoryName(cat) {
-            const cats = { 'chicken-sale': 'ขายไก่', 'chicken-purchase': 'ซื้อไก่', 'feed': 'ค่าอาหาร', 'medicine': 'ค่ายา', 'equipment': 'อุปกรณ์' };
-            return cats[cat] || 'อื่นๆ';
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-lg ${isInc ? 'text-emerald-600' : 'text-rose-600'}">${isInc ? '+' : '-'}฿${trans.amount.toLocaleString()}</span>
+                            <button onclick="deleteTransaction('${trans.id}')" class="text-slate-300 hover:text-rose-500 p-1"><i class="ph ph-trash text-lg"></i></button>
+                        </div>
+                    </div>`;
+            });
         }
         
         function showAddBreederModal() { document.getElementById('addBreederModal').classList.remove('hidden'); }
@@ -3090,11 +2777,10 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
         }
 
         function openBatchDetails(batchId) { currentBatchId = batchId; showSection('batchDetails'); renderBatchDetails(batchId); }
-        
         function renderBatchDetails(batchId) {
             const data = batchesDataStore[batchId];
             if (!data) return;
-           document.getElementById('batchDetailName').textContent = data.name;
+            document.getElementById('batchDetailName').textContent = data.name;
             document.getElementById('batchDetailParents').textContent = data.parents;
             const birthDate = new Date(data.birthDate);
             document.getElementById('batchDetailBirthDate').textContent = birthDate.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -3111,32 +2797,10 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
              const batch = batchesDataStore[currentBatchId];
             if(!batch) return;
             updateBreederSelects('editBatchFatherSelect', 'editBatchMotherSelect');
-            const [father, mother] = batch.parents ? batch.parents.split(' x ') : ['', ''];
-            
-            const fatherSelect = document.getElementById('editBatchFatherSelect');
-            const motherSelect = document.getElementById('editBatchMotherSelect');
-            
-            fatherSelect.value = father?.trim() || '';
-            motherSelect.value = mother?.trim() || '';
-
-            // ฟังก์ชันสำหรับดึงและอัปเดตสายพันธุ์
-            const updateBreedFields = () => {
-                 const fData = breedersDataStore.find(b => b.name === fatherSelect.value);
-                 const mData = breedersDataStore.find(b => b.name === motherSelect.value);
-                 
-                 // ให้ความสำคัญกับข้อมูลจริงใน breedersDataStore ก่อน ถ้าไม่มีค่อยใช้ที่เคยพิมพ์ไว้ใน batch
-                 document.getElementById('editBatchFatherBreed').value = fData?.breed || batch.fatherBreed || '';
-                 document.getElementById('editBatchMotherBreed').value = mData?.breed || batch.motherBreed || '';
-            };
-
-            // เรียกครั้งแรกเพื่อแสดงข้อมูลปัจจุบัน
-            updateBreedFields();
-
-            // ผูก Event Listener เมื่อผู้ใช้เปลี่ยนตัวเลือก
-            fatherSelect.addEventListener('change', updateBreedFields);
-            motherSelect.addEventListener('change', updateBreedFields);
-
-            document.getElementById('editBatchBirthDate').value = batch.birthDate || '';
+            const [father, mother] = batch.parents.split(' x ');
+            document.getElementById('editBatchFatherSelect').value = father?.trim() || '';
+            document.getElementById('editBatchMotherSelect').value = mother?.trim() || '';
+            document.getElementById('editBatchBirthDate').value = batch.birthDate;
             document.getElementById('addChickCount').value = '';
             document.getElementById('editBatchNote').value = batch.note || ''; 
             document.getElementById('editBatchModal').classList.remove('hidden'); 
@@ -3181,6 +2845,298 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             } 
         }
 
+        function renderDashboard() {
+            let all = [];
+            financeDataStore.forEach(t => all.push({ date: t.date, type: 'finance', data: t }));
+            Object.values(batchesDataStore).forEach(b => {
+                all.push({ date: b.birthDate, type: 'birth', data: b });
+                if(b.vaccinations) b.vaccinations.forEach(v => { if(v.status === 'completed' && v.completedDate) all.push({ date: v.completedDate, type: 'vaccine', data: { ...v, coopName: b.name } }); });
+            });
+            all.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const container = document.getElementById('dashboardRecentActivities');
+            if (container) {
+                container.innerHTML = '';
+                const recentActivities = all.slice(0, 5);
+                if (recentActivities.length === 0) {
+                    container.innerHTML = '<p class="text-center text-slate-500 py-4 font-medium">ยังไม่มีกิจกรรมล่าสุด</p>';
+                } else {
+                    recentActivities.forEach(act => {
+                        let activityHtml = '';
+                        if (act.type === 'finance') {
+                            const isIncome = act.data.type === 'income';
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl ${isIncome ? 'bg-emerald-50 border border-emerald-100' : 'bg-rose-50 border border-rose-100'}">
+                                <div><p class="font-bold ${isIncome ? 'text-emerald-800' : 'text-rose-800'}">${act.data.note}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="${isIncome ? 'text-emerald-600' : 'text-rose-600'} font-bold">${isIncome ? '+' : '-'}฿${act.data.amount.toLocaleString()}</span>
+                            </div>`;
+                        } else if (act.type === 'birth') {
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-amber-50 border border-amber-100">
+                                <div><p class="font-bold text-amber-800">🐣 บันทึกลูกไก่ ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="text-amber-600 font-bold">${act.data.totalChicks} ตัว</span>
+                            </div>`;
+                        } else if (act.type === 'vaccine') {
+                            activityHtml = `<div class="flex justify-between items-center p-3 rounded-xl bg-blue-50 border border-blue-100">
+                                <div><p class="font-bold text-blue-800">💉 ให้วัคซีน ${act.data.name}</p><p class="text-xs text-slate-500 font-medium mt-0.5">${act.data.coopName} - ${new Date(act.date).toLocaleDateString('th-TH')}</p></div>
+                                <span class="text-blue-600 font-bold">สำเร็จ</span>
+                            </div>`;
+                        }
+                        container.innerHTML += activityHtml;
+                    });
+                }
+            }
+
+            const alerts = document.getElementById('dashboardVaccineAlerts');
+            if (alerts) {
+                alerts.innerHTML = '';
+                let upcoming = []; const t = new Date(); t.setHours(0,0,0,0); const t3 = new Date(t); t3.setDate(t.getDate()+3);
+                Object.values(batchesDataStore).forEach(b => {
+                    if(b.vaccinations) b.vaccinations.forEach(v => { const vd = new Date(v.date); vd.setHours(0,0,0,0); if(v.status === 'pending' && vd >= t && vd <= t3) upcoming.push({ ...v, coopName: b.name, d: Math.ceil((vd-t)/86400000) }); });
+                });
+                upcoming.sort((a,b) => new Date(a.date) - new Date(b.date));
+                if(!upcoming.length) {
+                    alerts.innerHTML = '<div class="text-center text-slate-400 py-4 font-medium">ไม่มีรายการแจ้งเตือน</div>';
+                } else {
+                    upcoming.forEach(a => alerts.innerHTML += `<div class="flex justify-between items-center p-3 rounded-xl bg-purple-50 border-l-4 border-purple-500"><div><p class="font-bold text-purple-800">${a.coopName}: ${a.name}</p><p class="text-xs text-purple-600/70 mt-0.5">${new Date(a.date).toLocaleDateString('th-TH')}</p></div><span class="text-purple-700 bg-purple-100 px-2 py-1 rounded-lg text-xs font-bold">${a.d === 0 ? 'วันนี้' : `อีก ${a.d} วัน`}</span></div>`);
+                }
+            }
+        }
+
+        function updateGlobalStatistics() {
+            let totalAlive = 0, totalSold = 0, totalDead = 0, totalInitial = 0, totalRevenue = 0;
+            for (const id in batchesDataStore) {
+                const b = batchesDataStore[id];
+                totalAlive += b.aliveChicks || 0; totalSold += b.soldChicks || 0; totalDead += b.deadChicks || 0; totalInitial += b.totalChicks || 0; totalRevenue += b.revenue || 0;
+            }
+            const sRate = totalInitial > 0 ? Math.round(((totalAlive + totalSold) / totalInitial) * 100) : 0;
+            const saleRate = totalInitial > 0 ? Math.round((totalSold / totalInitial) * 100) : 0;
+            
+            document.getElementById('totalChicks').textContent = totalAlive;
+            document.getElementById('dashTotalChicks').textContent = totalAlive;
+            document.getElementById('dashSoldChicks').textContent = totalSold;
+            document.getElementById('dashDeadChicks').textContent = totalDead;
+            document.getElementById('dashSurvivalRate').textContent = `${sRate}%`;
+            
+            document.getElementById('totalMales').textContent = breedersDataStore.filter(b => b.gender === 'male' && b.status === 'alive').length;
+            document.getElementById('totalFemales').textContent = breedersDataStore.filter(b => b.gender === 'female' && b.status === 'alive').length;
+            
+            document.getElementById('reportSurvivalRateText').textContent = `${sRate}%`;
+            document.getElementById('reportSurvivalRateBar').style.width = `${sRate}%`;
+            document.getElementById('reportSaleRateText').textContent = `${saleRate}%`;
+            document.getElementById('reportSaleRateBar').style.width = `${saleRate}%`;
+            document.getElementById('reportAvgSalePrice').textContent = `฿${totalSold > 0 ? Math.round(totalRevenue / totalSold).toLocaleString() : 0}`;
+            
+            const exp = financeDataStore.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            document.getElementById('reportAvgProfitPerChick').textContent = `฿${totalSold > 0 ? Math.round((totalRevenue - exp) / totalSold).toLocaleString() : 0}`;
+            
+            if(document.getElementById('reports').classList.contains('hidden') === false) renderReportsPage();
+        }
+
+        // --- Save and Load Functions (Cloud Sync) ---
+        function saveData() {
+            if (!isCloudDataLoaded) return; // ป้องกันการเซฟทับคลาวด์ขณะกำลังโหลด
+            
+            // รวบรวมข้อมูลทั้งหมด
+            const farmDataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
+            
+            // บันทึกลงเครื่อง (เผื่อเน็ตหลุด)
+            localStorage.setItem('farmData', JSON.stringify(farmDataObj));
+            
+            if (!currentUser) return;
+            
+            // ทำความสะอาดและเข้ารหัสข้อมูลเป็น String เพื่อป้องกัน Error: Property array contains an invalid nested entity
+            const dataToSave = { 
+                payload: JSON.stringify(farmDataObj),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('users').doc(currentUser.uid).set(dataToSave, { merge: true })
+                .then(() => {
+                    const saveStatusEl = document.getElementById('saveStatus');
+                    if (saveStatusEl) {
+                        saveStatusEl.classList.remove('opacity-0');
+                        clearTimeout(saveStatusTimeout);
+                        saveStatusTimeout = setTimeout(() => saveStatusEl.classList.add('opacity-0'), 2000);
+                    }
+                }).catch(err => {
+                    console.error("Save Error:", err);
+                    showNotification('ซิงค์ข้อมูลบน Cloud ไม่สำเร็จ', 'error');
+                });
+        }
+        
+        function loadDataFromCloud() {
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    const docData = doc.data();
+                    let data = {};
+                    
+                    if (docData.payload) {
+                        try {
+                            data = JSON.parse(docData.payload);
+                        } catch(e) {
+                            console.error("Parse Error:", e);
+                        }
+                    } else {
+                        data = docData; // รองรับบัญชีเก่า
+                    }
+                    
+                    batchesDataStore = data.batches || {}; 
+                    breedersDataStore = data.breeders || []; 
+                    financeDataStore = data.finance || [];
+                    
+                    isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+                    
+                    // บันทึกลงเครื่องเพื่อเป็น Backup ออฟไลน์
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore }));
+                    
+                    renderAll();
+                    document.getElementById('syncOverlay').classList.add('hidden');
+                    document.getElementById('syncOverlay').classList.remove('flex');
+                } else {
+                    // หากเป็นบัญชีใหม่ ให้เช็คว่ามีข้อมูลเก่าในเครื่องไหม แล้วดึงขึ้นมา
+                    migrateLocalData();
+                }
+            }, err => {
+                console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
+                showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
+            });
+        }
+
+        function migrateLocalData() {
+            const str = localStorage.getItem('farmData');
+            isCloudDataLoaded = true; // ปลดล็อกให้เซฟข้อมูลได้
+            
+            if (str) {
+                try {
+                    const data = JSON.parse(str);
+                    if(data && (data.batches || data.breeders || data.finance)) {
+                        batchesDataStore = data.batches || {}; 
+                        breedersDataStore = data.breeders || []; 
+                        financeDataStore = data.finance || [];
+                        saveData(); // สั่งบันทึกข้อมูลเก่าจากเครื่องขึ้น Cloud
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
+                    }
+                } catch (e) { 
+                    console.error(e);
+                }
+            } else {
+                saveData(); // Save empty document to cloud
+            }
+            
+            renderAll();
+            document.getElementById('syncOverlay').classList.add('hidden');
+            document.getElementById('syncOverlay').classList.remove('flex');
+        }
+
+        function renderAll() {
+            // เช็คและซ่อมแซมโครงสร้างข้อมูลให้สมบูรณ์
+            breedersDataStore.forEach(b => { if (!b.photos) b.photos = []; if (!b.status) b.status = 'alive'; });
+            Object.values(batchesDataStore).forEach(b => {
+                if (!b.vaccinations) b.vaccinations = vaccineCalendar.generateVaccinationSchedule(b.birthDate);
+                if (b.chicks) b.chicks.forEach(c => { if (!c.photos) c.photos = []; });
+            });
+            
+            const grid = document.getElementById('chickBatchesGrid'); 
+            if (grid) {
+                grid.innerHTML = '';
+                
+                // ดึงข้อมูลและเรียงลำดับคอกไก่
+                const batchesArray = Object.values(batchesDataStore);
+                batchesArray.sort((a, b) => {
+                    const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
+                    const bAlive = b.chicks ? b.chicks.filter(c => c.status === 'alive').length : 0;
+                    
+                    // 1. แยกคอกที่ปิดแล้ว (ไม่มีไก่มีชีวิต) ไปไว้ท้ายสุด
+                    if (aAlive === 0 && bAlive > 0) return 1;
+                    if (aAlive > 0 && bAlive === 0) return -1;
+                    
+                    // 2. เรียงตามอายุ (เกิดก่อน = แก่กว่า = อยู่บนสุด)
+                    return new Date(a.birthDate) - new Date(b.birthDate);
+                });
+                
+                batchesArray.forEach(b => grid.appendChild(createBatchCard(b)));
+            }
+            
+            renderBreeders(); 
+            filterFinance(currentFinancePeriod); 
+            updateGlobalStatistics(); 
+            if (window.vaccineCalendar) window.vaccineCalendar.renderCoopList(); 
+            renderDashboard();
+            
+            if (currentBatchId && batchesDataStore[currentBatchId]) {
+                renderBatchDetails(currentBatchId);
+            }
+        }
+
+        function renderReportsPage() {
+            const tc = document.getElementById('topBreedersContainer');
+            if(!tc) return;
+            let stats = [];
+            breedersDataStore.filter(b=>b.gender==='female').forEach(b => {
+                let off = 0, sold = 0, rev = 0;
+                Object.values(batchesDataStore).forEach(ba => { if(ba.parents.split('x')[1]?.trim() === b.name) { off += ba.totalChicks; sold += ba.soldChicks||0; rev += ba.revenue||0; } });
+                if(off > 0) stats.push({ name: b.name, off, sold, rev, r: off>0?Math.round((sold/off)*100):0 });
+            });
+            stats.sort((a,b) => b.rev - a.rev);
+            if(!stats.length) tc.innerHTML = '<div class="text-center text-slate-400 py-4">ไม่มีข้อมูลเพียงพอ</div>';
+            else tc.innerHTML = stats.slice(0,3).map((b,i) => `<div class="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100"><div><p class="font-bold text-slate-800 text-lg">${['🥇','🥈','🥉'][i]} ${b.name}</p><p class="text-sm text-slate-500">ลูก: ${b.off} | ขาย: ${b.sold}</p></div><div class="text-right"><p class="text-xs text-slate-400 mb-1">รายได้</p><p class="font-bold text-emerald-600 text-xl">฿${b.rev.toLocaleString()}</p></div></div>`).join('');
+
+            const td = new Date(), m = td.getMonth(), y = td.getFullYear();
+            let nc = 0, sc = 0, rv = 0;
+            Object.values(batchesDataStore).forEach(b => {
+                if(new Date(b.birthDate).getMonth() === m && new Date(b.birthDate).getFullYear() === y) nc += b.totalChicks;
+                b.chicks.forEach(c => { if(c.status==='sold' && c.saleDate && new Date(c.saleDate).getMonth() === m && new Date(c.saleDate).getFullYear() === y) { sc++; rv+=parseInt(c.salePrice)||0; } });
+            });
+            document.getElementById('reportNewChicks').textContent = nc; document.getElementById('reportSoldChicks').textContent = sc;
+            document.getElementById('reportTotalRevenue').textContent = `฿${rv.toLocaleString()}`; document.getElementById('reportNetProfit').textContent = document.getElementById('monthlyProfit').textContent;
+        }
+
+        function backupData() {
+            const dataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
+            const dataStr = JSON.stringify(dataObj);
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
+            a.download = `farmpro_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click(); URL.revokeObjectURL(a.href); 
+            showNotification('ดาวน์โหลดไฟล์สำเร็จ');
+        }
+
+        function restoreData() {
+            const f = document.getElementById('restoreFile').files[0];
+            if (!f) return showNotification('กรุณาเลือกไฟล์', 'warning');
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    const d = JSON.parse(e.target.result);
+                    // เช็คว่าไฟล์มีโครงสร้างข้อมูลของแอป
+                    if (d.batches || d.breeders || d.finance) {
+                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบและบน Cloud จะถูกเขียนทับ', () => {
+                            batchesDataStore = d.batches || {};
+                            breedersDataStore = Array.isArray(d.breeders) ? d.breeders : Object.values(d.breeders || {});
+                            financeDataStore = Array.isArray(d.finance) ? d.finance : Object.values(d.finance || {});
+                            
+                            isCloudDataLoaded = true; // ปลดล็อกป้องกันการเซฟ
+                            saveData(); // บันทึกลงเครื่อง และอัปโหลดขึ้น Cloud
+                            
+                            renderAll(); // ⭐️ บังคับให้หน้าจอดึงข้อมูลใหม่มาแสดงทันที
+                            document.getElementById('restoreFile').value = ''; // เคลียร์ชื่อไฟล์
+                            
+                            showNotification('กู้คืนข้อมูลสำเร็จ!', 'success');
+                        });
+                    } else throw new Error();
+                }
+                catch (err) {
+                    console.error("Restore Error:", err);
+                    showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
+                }
+            };
+            r.readAsText(f);
+        }
+
+        // --- NEWLY ADDED MISSING FUNCTIONS BELOW ---
+        
         function renderDashboard() {
             // 1. นำข้อมูลกิจกรรมมารวมกัน
             let allActivities = [];
@@ -3278,101 +3234,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             }
         }
 
-        function updateGlobalStatistics() {
-            let totalAlive = 0, totalSold = 0, totalDead = 0, totalInitial = 0, totalRevenue = 0;
-            for (const id in batchesDataStore) {
-                const b = batchesDataStore[id];
-                totalAlive += b.aliveChicks || 0; totalSold += b.soldChicks || 0; totalDead += b.deadChicks || 0; totalInitial += b.totalChicks || 0; totalRevenue += b.revenue || 0;
-            }
-            const sRate = totalInitial > 0 ? Math.round(((totalAlive + totalSold) / totalInitial) * 100) : 0;
-            const saleRate = totalInitial > 0 ? Math.round((totalSold / totalInitial) * 100) : 0;
-            
-            document.getElementById('totalChicks').textContent = totalAlive;
-            document.getElementById('dashTotalChicks').textContent = totalAlive;
-            document.getElementById('dashSoldChicks').textContent = totalSold;
-            document.getElementById('dashDeadChicks').textContent = totalDead;
-            document.getElementById('dashSurvivalRate').textContent = `${sRate}%`;
-            
-            document.getElementById('totalMales').textContent = breedersDataStore.filter(b => b.gender === 'male' && b.status === 'alive').length;
-            document.getElementById('totalFemales').textContent = breedersDataStore.filter(b => b.gender === 'female' && b.status === 'alive').length;
-            
-            document.getElementById('reportSurvivalRateText').textContent = `${sRate}%`;
-            document.getElementById('reportSurvivalRateBar').style.width = `${sRate}%`;
-            document.getElementById('reportSaleRateText').textContent = `${saleRate}%`;
-            document.getElementById('reportSaleRateBar').style.width = `${saleRate}%`;
-            document.getElementById('reportAvgSalePrice').textContent = `฿${totalSold > 0 ? Math.round(totalRevenue / totalSold).toLocaleString() : 0}`;
-            
-            const exp = financeDataStore.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-            document.getElementById('reportAvgProfitPerChick').textContent = `฿${totalSold > 0 ? Math.round((totalRevenue - exp) / totalSold).toLocaleString() : 0}`;
-            
-            if(document.getElementById('reports').classList.contains('hidden') === false) renderReportsPage();
-        }
-
-        function renderReportsPage() {
-            const tc = document.getElementById('topBreedersContainer');
-            if(!tc) return;
-            let stats = [];
-            breedersDataStore.filter(b=>b.gender==='female').forEach(b => {
-                let off = 0, sold = 0, rev = 0;
-                Object.values(batchesDataStore).forEach(ba => { if(ba.parents.split('x')[1]?.trim() === b.name) { off += ba.totalChicks; sold += ba.soldChicks||0; rev += ba.revenue||0; } });
-                if(off > 0) stats.push({ name: b.name, off, sold, rev, r: off>0?Math.round((sold/off)*100):0 });
-            });
-            stats.sort((a,b) => b.rev - a.rev);
-            if(!stats.length) tc.innerHTML = '<div class="text-center text-slate-400 py-4">ไม่มีข้อมูลเพียงพอ</div>';
-            else tc.innerHTML = stats.slice(0,3).map((b,i) => `<div class="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100"><div><p class="font-bold text-slate-800 text-lg">${['🥇','🥈','🥉'][i]} ${b.name}</p><p class="text-sm text-slate-500">ลูก: ${b.off} | ขาย: ${b.sold}</p></div><div class="text-right"><p class="text-xs text-slate-400 mb-1">รายได้</p><p class="font-bold text-emerald-600 text-xl">฿${b.rev.toLocaleString()}</p></div></div>`).join('');
-
-            const td = new Date(), m = td.getMonth(), y = td.getFullYear();
-            let nc = 0, sc = 0, rv = 0;
-            Object.values(batchesDataStore).forEach(b => {
-                if(new Date(b.birthDate).getMonth() === m && new Date(b.birthDate).getFullYear() === y) nc += b.totalChicks;
-                b.chicks.forEach(c => { if(c.status==='sold' && c.saleDate && new Date(c.saleDate).getMonth() === m && new Date(c.saleDate).getFullYear() === y) { sc++; rv+=parseInt(c.salePrice)||0; } });
-            });
-            document.getElementById('reportNewChicks').textContent = nc; document.getElementById('reportSoldChicks').textContent = sc;
-            document.getElementById('reportTotalRevenue').textContent = `฿${rv.toLocaleString()}`; document.getElementById('reportNetProfit').textContent = document.getElementById('monthlyProfit').textContent;
-        }
-
-        function backupData() {
-            const dataObj = { batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore };
-            const dataStr = JSON.stringify(dataObj);
-            const a = document.createElement('a'); 
-            a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
-            a.download = `farmpro_backup_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click(); URL.revokeObjectURL(a.href); 
-            showNotification('ดาวน์โหลดไฟล์สำเร็จ');
-        }
-
-        function restoreData() {
-            const f = document.getElementById('restoreFile').files[0];
-            if (!f) return showNotification('กรุณาเลือกไฟล์', 'warning');
-            const r = new FileReader();
-            r.onload = e => {
-                try {
-                    const d = JSON.parse(e.target.result);
-                    // เช็คว่าไฟล์มีโครงสร้างข้อมูลของแอป
-                    if (d.batches || d.breeders || d.finance) {
-                        showConfirmation('กู้คืนข้อมูล', 'ข้อมูลปัจจุบันในระบบและบน Cloud จะถูกเขียนทับ', () => {
-                            batchesDataStore = d.batches || {};
-                            breedersDataStore = Array.isArray(d.breeders) ? d.breeders : Object.values(d.breeders || {});
-                            financeDataStore = Array.isArray(d.finance) ? d.finance : Object.values(d.finance || {});
-                            
-                            isCloudDataLoaded = true; // ปลดล็อกป้องกันการเซฟ
-                            saveData(); // บันทึกลงเครื่อง และอัปโหลดขึ้น Cloud
-                            
-                            renderAll(); // ⭐️ บังคับให้หน้าจอดึงข้อมูลใหม่มาแสดงทันที
-                            document.getElementById('restoreFile').value = ''; // เคลียร์ชื่อไฟล์
-                            
-                            showNotification('กู้คืนข้อมูลสำเร็จ!', 'success');
-                        });
-                    } else throw new Error();
-                }
-                catch (err) {
-                    console.error("Restore Error:", err);
-                    showNotification('รูปแบบไฟล์ไม่ถูกต้อง', 'error');
-                }
-            };
-            r.readAsText(f);
-        }
-
         function editBreeder(btn) {
             const card = btn.closest('[data-id]');
             if (!card) return;
@@ -3384,7 +3245,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             document.getElementById('editBreederName').value = breeder.name;
             document.getElementById('editBreederCode').value = breeder.code || '';
             document.getElementById('editBreederBreed').value = breeder.breed || '';
-            document.getElementById('editBreederBirthDate').value = breeder.birthDate || '';
             document.getElementById('editBreederSource').value = breeder.source || '';
             document.getElementById('editBreederStatus').value = breeder.status || 'alive';
             document.getElementById('editBreederSalePrice').value = breeder.salePrice || '';
@@ -3415,7 +3275,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             if (!chick) return;
 
             document.getElementById('updateChickId').value = chickId;
-            document.getElementById('chickName').value = chick.name || '';
             document.getElementById('chickCode').value = chick.code || '';
             document.getElementById('chickStatus').value = chick.status || 'alive';
             document.getElementById('chickGender').value = chick.gender || 'unknown';
@@ -3521,35 +3380,19 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             });
 
             financeChartInstance = new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: labels,
                     datasets: [
-                        { 
-                            label: 'รายรับ', 
-                            data: incomes, 
-                            backgroundColor: '#059669',
-                            borderRadius: 4
-                        },
-                        { 
-                            label: 'รายจ่าย', 
-                            data: expenses, 
-                            backgroundColor: '#ef4444',
-                            borderRadius: 4
-                        }
+                        { label: 'รายรับ', data: incomes, borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.1)', fill: true, tension: 0.3 },
+                        { label: 'รายจ่าย', data: expenses, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { 
-                            beginAtZero: true,
-                            grid: { borderDash: [4, 4], color: '#f1f5f9' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true }
                     }
                 }
             });
@@ -3651,493 +3494,6 @@ ${financeSummary || 'ไม่มีข้อมูลบัญชี'}
             }
             
             updateChickVisuals(chickId);
-        }
-
-        // --- Fight Record Functions ---
-        function openFightRecordModal(breederId) {
-            const breeder = breedersDataStore.find(b => b.id === breederId);
-            if (!breeder) return;
-            document.getElementById('currentFightBreederId').value = breederId;
-            document.getElementById('fightDate').valueAsDate = new Date();
-            document.getElementById('fightRecordModal').classList.remove('hidden');
-            renderFightHistory(breederId);
-        }
-
-        function closeFightRecordModal() { 
-            document.getElementById('fightRecordModal').classList.add('hidden'); 
-            document.getElementById('fightRecordForm').reset(); 
-        }
-
-        function renderFightHistory(breederId) {
-            const breeder = breedersDataStore.find(b => b.id === breederId); 
-            const list = document.getElementById('fightHistoryList');
-            if (!breeder || !breeder.fights || breeder.fights.length === 0) { 
-                list.innerHTML = '<div class="text-center text-slate-400 py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">ยังไม่มีประวัติการชน/ซ้อม</div>'; 
-                return; 
-            }
-            
-            list.innerHTML = '';
-            const records = [...breeder.fights].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            records.forEach(r => {
-                let badgeClass = ''; let resultText = '';
-                if (r.result === 'win') { badgeClass = 'bg-emerald-100 text-emerald-700'; resultText = '🏆 ชนะ'; }
-                else if (r.result === 'draw') { badgeClass = 'bg-amber-100 text-amber-700'; resultText = '🤝 เสมอ'; }
-                else if (r.result === 'lose') { badgeClass = 'bg-rose-100 text-rose-700'; resultText = '💔 แพ้'; }
-                else { badgeClass = 'bg-blue-100 text-blue-700'; resultText = '🥊 ซ้อม'; }
-
-                list.innerHTML += `
-                    <div class="p-4 rounded-xl border border-slate-100 bg-white hover:bg-slate-50 transition-colors relative group">
-                        <button onclick="deleteFightRecord('${breederId}', '${r.id}')" class="absolute top-2 right-2 text-slate-300 hover:text-rose-500 p-1 bg-white rounded-md opacity-0 md:group-hover:opacity-100 transition-opacity" title="ลบประวัติ"><i class="ph ph-trash text-lg"></i></button>
-                        <div class="flex justify-between items-start mb-2 pr-6">
-                            <div><span class="px-2.5 py-1 rounded-lg text-xs font-bold ${badgeClass}">${resultText}</span><span class="text-sm font-bold text-slate-800 ml-2">${r.location || 'ไม่ระบุสถานที่'}</span></div>
-                        </div>
-                        <div class="flex justify-between items-end mt-2">
-                            <span class="text-xs font-medium text-slate-500"><i class="ph ph-calendar-blank"></i> ${new Date(r.date).toLocaleDateString('th-TH')}</span>
-                            <div class="text-right shrink-0">
-                                <p class="text-[10px] text-slate-400 font-bold mb-0.5">เงินรางวัล/เดิมพัน</p>
-                                <p class="text-sm font-bold text-slate-800">฿${(r.prize || 0).toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function deleteFightRecord(breederId, fightId) {
-            showConfirmation('ลบสถิติ', 'คุณต้องการลบสถิติรายการนี้ใช่หรือไม่?', () => {
-                const breeder = breedersDataStore.find(b => b.id === breederId);
-                if (breeder && breeder.fights) {
-                    const index = breeder.fights.findIndex(f => f.id === fightId);
-                    if (index > -1) {
-                        breeder.fights.splice(index, 1);
-                        saveData();
-                        renderFightHistory(breederId);
-                        showNotification('ลบสถิติสำเร็จ', 'success');
-                    }
-                }
-            });
-        }
-
-        function promoteToBreeder() {
-            const chickId = document.getElementById('updateChickId').value;
-            const batch = batchesDataStore[currentBatchId];
-            const chick = batch.chicks.find(c => c.id == chickId);
-            
-            if (!chick) return;
-            
-            const gender = document.getElementById('chickGender').value;
-            const code = document.getElementById('chickCode').value;
-            const name = document.getElementById('chickName').value;
-            
-            if (gender === 'unknown') {
-                showNotification('กรุณาระบุเพศก่อนเลื่อนขั้นเป็นพ่อ/แม่พันธุ์', 'warning');
-                return;
-            }
-            
-            showConfirmation('เลื่อนขั้นเป็นพ่อ/แม่พันธุ์', 'คุณต้องการย้ายลูกไก่ตัวนี้ไปที่หน้าจัดการพ่อ/แม่พันธุ์ใช่หรือไม่?', () => {
-                // ดึงข้อมูลพ่อแม่จากคอก (หรือจากฐานข้อมูลไก่พันธุ์โดยตรง)
-                const parents = batch.parents ? batch.parents.split(' x ') : ['', ''];
-                const fatherName = parents[0] ? parents[0].trim() : '';
-                const motherName = parents[1] ? parents[1].trim() : '';
-                
-                const fatherData = breedersDataStore.find(b => b.name === fatherName);
-                const motherData = breedersDataStore.find(b => b.name === motherName);
-
-                // นำชื่อพ่อ + (สายพันธุ์แม่)
-                const motherBreedDisplay = motherData?.breed || batch.motherBreed || 'ไม่ทราบสายพันธุ์แม่';
-                const combinedBreed = `${fatherName || 'ไม่ทราบชื่อพ่อ'} + (${motherBreedDisplay})`;
-
-                // 1. สร้างรายการในฐานข้อมูลพ่อแม่พันธุ์
-                const newBreederId = 'breeder-' + Date.now();
-                const newBreeder = {
-                    id: newBreederId,
-                    name: name || code || 'ลูกไก่จาก ' + batch.name + ' (#' + chickId + ')',
-                    code: code,
-                    gender: gender,
-                    breed: combinedBreed,
-                    birthDate: batch.birthDate,
-                    source: `เลื่อนขั้นจาก: ${batch.name} (${batch.parents})`,
-                    photos: chick.photos ? JSON.parse(JSON.stringify(chick.photos)) : [],
-                    status: 'alive'
-                };
-                
-                breedersDataStore.push(newBreeder);
-                
-                // 2. ลบข้อมูลบัญชีรายรับเก่า
-                if (chick.status === 'sold' && chick.transactionId) {
-                    const transactionIndex = financeDataStore.findIndex(t => t.id === chick.transactionId);
-                    if (transactionIndex > -1) financeDataStore.splice(transactionIndex, 1);
-                }
-                
-                // 3. อัปเดตสถานะลูกไก่
-                chick.status = 'promoted';
-                chick.gender = gender;
-                chick.code = code;
-                chick.name = name;
-                
-                delete chick.salePrice;
-                delete chick.saleDate;
-                delete chick.buyerName;
-                delete chick.transactionId;
-                delete chick.deathDate;
-                delete chick.deathCause;
-                
-                // 4. บันทึก
-                updateChickVisuals(chickId);
-                updateBatchStatistics(currentBatchId);
-                renderAll();
-                saveData();
-                
-                closeChickUpdateModal();
-                showNotification('เลื่อนขั้นเป็นพ่อ/แม่พันธุ์สำเร็จ!', 'success');
-            });
-        }
-
-        function printBreederProfile(id) {
-            const breeder = breedersDataStore.find(b => b.id === id);
-            if (!breeder) return showNotification('ไม่พบข้อมูลไก่', 'error');
-
-            const printWindow = window.open('', '_blank');
-            const photoUrl = breeder.photos && breeder.photos.length > 0 ? breeder.photos[0].data || breeder.photos[0].url : '';
-            const photoHtml = photoUrl ? `<img src="${photoUrl}" style="max-width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin: 0 auto 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">` : `<div style="width: 100%; height: 200px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 20px; font-size: 64px;">${breeder.gender === 'male' ? '🐓' : '🐔'}</div>`;
-
-            let ageText = 'ไม่ระบุ';
-            if (breeder.birthDate) {
-                 const bDate = new Date(breeder.birthDate);
-                 const now = new Date();
-                 let monthsDiff = (now.getFullYear() - bDate.getFullYear()) * 12 + (now.getMonth() - bDate.getMonth());
-                 if (now.getDate() < bDate.getDate()) monthsDiff--;
-                 if (monthsDiff < 0) monthsDiff = 0;
-                 const yrs = Math.floor(monthsDiff / 12);
-                 const mos = monthsDiff % 12;
-                 if (yrs === 0 && mos === 0) ageText = 'ไม่ถึง 1 เดือน';
-                 else {
-                     ageText = yrs > 0 ? `${yrs} ปี ` : '';
-                     ageText += mos > 0 ? `${mos} เดือน` : '';
-                 }
-            }
-
-            const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="th">
-            <head>
-                <meta charset="UTF-8">
-                <title>ใบประวัติไก่ - ${breeder.name}</title>
-                <script src="https://cdn.tailwindcss.com"><\/script>
-                <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
-                <style>
-                    body { font-family: 'Prompt', sans-serif; padding: 40px; color: #1e293b; background: white; }
-                    @media print {
-                        @page { size: A4 portrait; margin: 20mm; }
-                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
-                        .no-print { display: none; }
-                    }
-                </style>
-            </head>
-            <body onload="setTimeout(() => { window.print(); }, 800);">
-                <div class="max-w-2xl mx-auto border-2 border-emerald-600 rounded-3xl p-10 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-full -z-10"></div>
-                    <div class="absolute bottom-0 left-0 w-40 h-40 bg-slate-50 rounded-tr-full -z-10"></div>
-                    
-                    <div class="text-center mb-8 border-b-2 border-emerald-100 pb-6">
-                        <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-inner">🐓</div>
-                        <h1 class="text-3xl font-bold text-emerald-800 mb-1">ใบรับรองพันธุ์ประวัติ (Pedigree)</h1>
-                        <h2 class="text-lg text-slate-500 font-medium">ไก่ชนฟาร์มโปร (Kaichon Farm Pro)</h2>
-                    </div>
-
-                    <div class="text-center">
-                        ${photoHtml}
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-x-8 gap-y-5 text-lg mt-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div class="col-span-2 border-b border-slate-100 pb-4 mb-2">
-                            <p class="text-sm text-slate-400 font-semibold uppercase tracking-wider mb-1">ชื่อไก่ (Name)</p>
-                            <p class="font-bold text-3xl text-slate-800">${breeder.name}</p>
-                        </div>
-                        
-                        <div>
-                            <p class="text-sm text-slate-400 font-semibold mb-1">รหัสประจำตัว (Code)</p>
-                            <p class="font-bold text-slate-700">${breeder.code || '-'}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-400 font-semibold mb-1">เพศ (Gender)</p>
-                            <p class="font-bold ${breeder.gender === 'male' ? 'text-blue-600' : 'text-pink-600'}">${breeder.gender === 'male' ? 'ผู้ (Male)' : 'เมีย (Female)'}</p>
-                        </div>
-                        
-                        <div>
-                            <p class="text-sm text-slate-400 font-semibold mb-1">สายพันธุ์ (Breed)</p>
-                            <p class="font-bold text-slate-700">${breeder.breed || '-'}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-slate-400 font-semibold mb-1">อายุ (Age)</p>
-                            <p class="font-bold text-slate-700">${ageText}</p>
-                        </div>
-
-                        <div class="col-span-2 mt-2 pt-4 border-t border-slate-100">
-                            <p class="text-sm text-slate-400 font-semibold mb-1">วันเกิด / วันฟัก (Birth Date)</p>
-                            <p class="font-bold text-slate-700">${breeder.birthDate ? new Date(breeder.birthDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}</p>
-                        </div>
-
-                        <div class="col-span-2 mt-2">
-                            <p class="text-sm text-slate-400 font-semibold mb-1">ที่มา / สายเลือดพ่อแม่ (Lineage/Source)</p>
-                            <p class="font-bold text-amber-700 bg-amber-50 px-4 py-3 rounded-xl border border-amber-100">${breeder.source || 'ไม่ระบุ'}</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-10 pt-6 border-t border-slate-200 text-center flex justify-between items-end">
-                        <div class="text-left">
-                            <p class="text-xs text-slate-400 mb-1">QR Code (อ้างอิงระบบ)</p>
-                            <div class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-xs font-bold border border-slate-300">ฟาร์มโปร</div>
-                        </div>
-                        <div class="text-right text-sm text-slate-500">
-                            <p class="mb-4">........................................................</p>
-                            <p class="font-bold text-slate-700">ลายมือชื่อผู้รับรอง / เจ้าของฟาร์ม</p>
-                            <p class="text-xs mt-1">พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-6 no-print">
-                    <button onclick="window.print()" class="bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:bg-emerald-700">พิมพ์เอกสารนี้</button>
-                    <button onclick="window.close()" class="bg-slate-200 text-slate-700 px-6 py-2 rounded-xl font-bold shadow-sm hover:bg-slate-300 ml-3">ปิดหน้าต่าง</button>
-                </div>
-            </body>
-            </html>
-            `;
-            printWindow.document.open();
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
-        }
-
-        function generateCertificate(breederId) {
-            const breeder = breedersDataStore.find(b => b.id === breederId);
-            if (!breeder) {
-                showNotification('ไม่พบข้อมูลไก่', 'error');
-                return;
-            }
-
-            const certImage = document.getElementById('certImage');
-            if (breeder.photos && breeder.photos.length > 0) {
-                certImage.src = breeder.photos[0].data || breeder.photos[0].url;
-            } else {
-                certImage.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="50%" y="50%" font-size="10" text-anchor="middle" dy=".3em" fill="%23cbd5e1" stroke="none">ไม่มีรูป</text></svg>';
-            }
-
-            document.getElementById('certName').textContent = breeder.name || '-';
-            document.getElementById('certCode').textContent = breeder.code || '-';
-            document.getElementById('certBreed').textContent = breeder.breed || '-';
-            
-            let birthDateStr = '-';
-            if (breeder.birthDate) {
-                birthDateStr = new Date(breeder.birthDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-            }
-            document.getElementById('certBirth').textContent = birthDateStr;
-            document.getElementById('certSource').textContent = breeder.source || 'ไม่ระบุ';
-            
-            document.getElementById('certPrintDate').textContent = 'พิมพ์เมื่อ: ' + new Date().toLocaleString('th-TH');
-
-            document.getElementById('certificateModal').classList.remove('hidden');
-        }
-
-        function closeCertificateModal() {
-            document.getElementById('certificateModal').classList.add('hidden');
-        }
-
-        function generateChickCertificate() {
-            const chickId = document.getElementById('updateChickId').value;
-            const batch = batchesDataStore[currentBatchId];
-            if (!batch) return;
-            const chick = batch.chicks.find(c => c.id == chickId);
-            
-            if (!chick) {
-                showNotification('ไม่พบข้อมูลลูกไก่', 'error');
-                return;
-            }
-
-            const certImage = document.getElementById('certImage');
-            if (chick.photos && chick.photos.length > 0) {
-                certImage.src = chick.photos[0].data || chick.photos[0].url;
-            } else {
-                certImage.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><text x="50%" y="50%" font-size="10" text-anchor="middle" dy=".3em" fill="%23cbd5e1" stroke="none">ไม่มีรูป</text></svg>';
-            }
-
-            document.getElementById('certName').textContent = chick.name || 'ไม่ระบุชื่อ';
-            document.getElementById('certCode').textContent = chick.code || 'ไม่มีรหัส';
-            
-            // ดึงข้อมูลสายพันธุ์มาแสดงผลรูปแบบ "ชื่อพ่อ + (สายพันธุ์แม่)"
-            let combinedBreedInfo = '-';
-            if (batch.parents) {
-                const parents = batch.parents.split(' x ');
-                const fatherName = parents[0] ? parents[0].trim() : '';
-                const motherName = parents[1] ? parents[1].trim() : '';
-                
-                const motherData = breedersDataStore.find(b => b.name === motherName);
-                const motherBreedDisplay = motherData?.breed || batch.motherBreed || 'ไม่ทราบสายพันธุ์แม่';
-                
-                combinedBreedInfo = `${fatherName || 'ไม่ทราบชื่อพ่อ'} + (${motherBreedDisplay})`;
-            }
-            document.getElementById('certBreed').textContent = combinedBreedInfo;
-            
-            let birthDateStr = '-';
-            if (batch.birthDate) {
-                birthDateStr = new Date(batch.birthDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-            }
-            document.getElementById('certBirth').textContent = birthDateStr;
-            document.getElementById('certSource').textContent = `คอก: ${batch.name} (${batch.parents})`;
-            
-            document.getElementById('certPrintDate').textContent = 'พิมพ์เมื่อ: ' + new Date().toLocaleString('th-TH');
-
-            document.getElementById('certificateModal').classList.remove('hidden');
-        }
-
-        function closeCertificateModal() {
-            document.getElementById('certificateModal').classList.add('hidden');
-        }
-
-        function printFinanceReport() {
-            // ดึงข้อมูลบัญชีและจัดเรียงตามวันที่เก่าสุดไปใหม่สุด เพื่อให้ดูเป็น Statement ง่ายขึ้น
-            let transactionsToPrint = [...financeDataStore];
-            
-            // กรองข้อมูลตามระยะเวลาที่กำลังเลือกอยู่ (currentFinancePeriod)
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const weekAgo = new Date(today);
-            weekAgo.setDate(weekAgo.getDate() - 7);
-
-            transactionsToPrint = transactionsToPrint.filter(t => {
-                const date = new Date(t.date);
-                date.setHours(0,0,0,0);
-                if (currentFinancePeriod === 'daily') return date.getTime() === today.getTime();
-                if (currentFinancePeriod === 'weekly') return date >= weekAgo;
-                if (currentFinancePeriod === 'monthly') return date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-                if (currentFinancePeriod === 'yearly') return date.getFullYear() === today.getFullYear();
-                return true; // 'all'
-            });
-
-            transactionsToPrint.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let reportTitle = '';
-
-            if (currentFinancePeriod === 'daily') reportTitle = 'รายงานประจำวัน';
-            else if (currentFinancePeriod === 'weekly') reportTitle = 'รายงานประจำสัปดาห์';
-            else if (currentFinancePeriod === 'monthly') reportTitle = 'รายงานประจำเดือน';
-            else if (currentFinancePeriod === 'yearly') reportTitle = 'รายงานประจำปี';
-            else reportTitle = 'รายงานบัญชีทั้งหมด';
-
-            // สร้าง HTML สำหรับตารางข้อมูล
-            let tableRows = '';
-            if (transactionsToPrint.length === 0) {
-                tableRows = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: #64748b;">ไม่มีรายการบัญชีในช่วงเวลานี้</td></tr>';
-            } else {
-                transactionsToPrint.forEach((t, index) => {
-                    const isIncome = t.type === 'income';
-                    if (isIncome) totalIncome += t.amount;
-                    else totalExpense += t.amount;
-                    
-                    const dateStr = new Date(t.date).toLocaleDateString('th-TH');
-                    
-                    tableRows += `
-                        <tr style="border-bottom: 1px solid #e2e8f0;">
-                            <td style="padding: 12px 8px; text-align: center; color: #64748b;">${index + 1}</td>
-                            <td style="padding: 12px 8px;">${dateStr}</td>
-                            <td style="padding: 12px 8px; font-weight: 500;">${t.note}</td>
-                            <td style="padding: 12px 8px; text-align: right; color: #059669; font-weight: bold;">${isIncome ? '฿' + t.amount.toLocaleString() : '-'}</td>
-                            <td style="padding: 12px 8px; text-align: right; color: #ef4444; font-weight: bold;">${!isIncome ? '฿' + t.amount.toLocaleString() : '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            const netProfit = totalIncome - totalExpense;
-            const printDate = new Date().toLocaleString('th-TH');
-
-            const printWindow = window.open('', '_blank');
-            const htmlContent = `
-            <!DOCTYPE html>
-            <html lang="th">
-            <head>
-                <meta charset="UTF-8">
-                <title>รายงานบัญชีฟาร์มโปร</title>
-                <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
-                <style>
-                    body { font-family: 'Prompt', sans-serif; padding: 40px; color: #1e293b; background: white; margin: 0; }
-                    @media print {
-                        @page { size: A4 portrait; margin: 15mm; }
-                        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; }
-                        .no-print { display: none; }
-                    }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-                    th { background-color: #f8fafc; color: #475569; font-weight: 600; text-transform: uppercase; font-size: 12px; padding: 12px 8px; text-align: left; border-bottom: 2px solid #cbd5e1; }
-                    th.text-center { text-align: center; }
-                    th.text-right { text-align: right; }
-                    .header-box { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #059669; padding-bottom: 20px; }
-                    .summary-grid { display: flex; justify-content: flex-end; gap: 20px; margin-top: 20px; }
-                    .summary-box { padding: 15px 25px; border-radius: 12px; text-align: right; border: 1px solid #e2e8f0; background: #f8fafc; min-width: 150px; }
-                    .summary-box.profit { border-color: #a7f3d0; background: #ecfdf5; }
-                    .summary-box.loss { border-color: #fecaca; background: #fef2f2; }
-                    .footer-sign { margin-top: 60px; text-align: right; font-size: 14px; color: #64748b; }
-                </style>
-            </head>
-            <body onload="setTimeout(() => { window.print(); }, 500);">
-                
-                <div class="header-box">
-                    <div>
-                        <div style="font-size: 32px; font-weight: 700; color: #059669; margin-bottom: 4px;">สรุปบัญชีรายรับ-รายจ่าย</div>
-                        <div style="font-size: 16px; color: #475569; font-weight: 600;">ไก่ชนฟาร์มโปร (Kaichon Farm Pro)</div>
-                        <div style="font-size: 14px; color: #64748b; margin-top: 8px;">ประเภทรายงาน: <strong style="color:#1e293b">${reportTitle}</strong></div>
-                    </div>
-                    <div style="text-align: right; font-size: 12px; color: #94a3b8;">
-                        <p style="margin:0;">พิมพ์เมื่อ: ${printDate}</p>
-                    </div>
-                </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="text-center" width="5%">ลำดับ</th>
-                            <th width="15%">วันที่</th>
-                            <th width="50%">รายการ</th>
-                            <th class="text-right" width="15%">รายรับ</th>
-                            <th class="text-right" width="15%">รายจ่าย</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows}
-                    </tbody>
-                </table>
-
-                <div class="summary-grid">
-                    <div class="summary-box">
-                        <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">รวมรายรับ</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #059669;">฿${totalIncome.toLocaleString()}</div>
-                    </div>
-                    <div class="summary-box">
-                        <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">รวมรายจ่าย</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #ef4444;">฿${totalExpense.toLocaleString()}</div>
-                    </div>
-                    <div class="summary-box ${netProfit >= 0 ? 'profit' : 'loss'}">
-                        <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">กำไรสุทธิ (Net Profit)</div>
-                        <div style="font-size: 24px; font-weight: bold; color: ${netProfit >= 0 ? '#059669' : '#ef4444'};">฿${netProfit.toLocaleString()}</div>
-                    </div>
-                </div>
-
-                <div class="footer-sign">
-                    <p style="margin-bottom: 30px;">...................................................................</p>
-                    <p style="margin: 0; font-weight: bold; color: #1e293b;">ลายมือชื่อผู้สรุปบัญชี / เจ้าของฟาร์ม</p>
-                </div>
-
-                <div class="no-print" style="text-align: center; margin-top: 40px;">
-                    <button onclick="window.print()" style="background-color: #059669; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: 'Prompt', sans-serif;">🖨️ พิมพ์รายงาน</button>
-                    <button onclick="window.close()" style="background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 24px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-left: 12px; font-family: 'Prompt', sans-serif;">ปิดหน้าต่าง</button>
-                </div>
-            </body>
-            </html>
-            `;
-            printWindow.document.open();
-            printWindow.document.write(htmlContent);
-            printWindow.document.close();
         }
 
     </script>
