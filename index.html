@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ฟาร์มโปร">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -2006,18 +2007,15 @@
 
         <!-- Content Body (Scrollable Reading Area) -->
         <div class="flex-1 overflow-y-auto custom-scrollbar bg-[#fafaf9]">
-            <div class="max-w-2xl mx-auto px-6 py-10 sm:py-16">
-                <!-- Text Area -->
-                <div id="readKnowledgeDesc" class="text-xl sm:text-2xl text-slate-800 leading-[2.2] font-normal whitespace-pre-wrap transition-opacity duration-300 min-h-[50vh]">
-                    <!-- Text injected here -->
-                </div>
+            <div class="max-w-3xl mx-auto px-5 py-8 sm:px-8 sm:py-12">
                 
-                <!-- Cover Image (Show only on Last Page) -->
-                <div id="readKnowledgeCoverContainer" class="mt-12 hidden fade-in pb-10">
-                    <hr class="border-slate-200 mb-10">
-                    <p class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest text-center">ภาพประกอบบทความ</p>
-                    <img id="readKnowledgeCover" src="" class="w-full max-h-[60vh] object-contain rounded-2xl shadow-xl border border-slate-100 bg-white p-2">
+                <div id="readKnowledgeCoverContainer" class="mb-8 hidden fade-in w-full">
+                    <img id="readKnowledgeCover" src="" class="w-full max-h-[50vh] sm:max-h-[60vh] object-contain bg-white rounded-2xl shadow-md border border-slate-200 p-1">
                 </div>
+
+                <div id="readKnowledgeDesc" class="text-lg sm:text-xl text-slate-800 leading-[2.2] font-normal whitespace-pre-wrap transition-opacity duration-300 min-h-[50vh]">
+                    </div>
+                
             </div>
         </div>
 
@@ -2762,21 +2760,124 @@
         // --- Core Application Initialization ---
         document.addEventListener('DOMContentLoaded', function() {
             vaccineCalendar.init();
+            
+            // 1. ลงทะเบียนฟอร์แมต "กล่องข้อความ" ให้ Quill
+            const Block = Quill.import('blots/block');
+            class CustomBoxBlot extends Block {
+                static create(color) {
+                    let node = super.create();
+                    
+                    // 💡 แก้ไข: เอา font-medium ออก และเพิ่ม text-slate-800 เพื่อให้ตัวอักษรเป็นสีปกติและปรับแต่งเองได้
+                    node.className = 'custom-q-box p-4 my-3 rounded-xl border-l-4 block text-slate-800 ';
+                    
+                    // 💡 แก้ไข: เอาโค้ดบังคับสีตัวอักษร (เช่น text-rose-900) ทิ้งไป ให้เหลือแค่สีพื้นหลังและสีขอบ
+                    if (color === 'red') node.className += 'bg-rose-50 border-rose-500';
+                    else if (color === 'yellow') node.className += 'bg-amber-50 border-amber-500';
+                    else if (color === 'green') node.className += 'bg-emerald-50 border-emerald-500';
+                    else if (color === 'blue') node.className += 'bg-blue-50 border-blue-500';
+                    
+                    node.setAttribute('data-color', color);
+                    return node;
+                }
+                static formats(node) {
+                    return node.getAttribute('data-color');
+                }
+            }
+            CustomBoxBlot.blotName = 'customBox';
+            CustomBoxBlot.tagName = 'div';
+            CustomBoxBlot.className = 'custom-q-box'; 
+            Quill.register(CustomBoxBlot);
 
-            // Initializing Quill Editor
+           // 2. เติม CSS ของปุ่ม 4 สี และเวทมนตร์ผสานกล่อง
+            const customCss = `
+                /* CSS ของปุ่มบน Toolbar */
+                .ql-toolbar button.ql-customBox { width: 30px; height: 24px; display: inline-flex; align-items: center; justify-content: center; margin-right: 5px; }
+                .ql-customBox[value="red"]::after { content: "🟥"; font-size: 16px; }
+                .ql-customBox[value="yellow"]::after { content: "🟨"; font-size: 16px; }
+                .ql-customBox[value="green"]::after { content: "🟩"; font-size: 16px; }
+                .ql-customBox[value="blue"]::after { content: "🟦"; font-size: 16px; }
+
+                /* CSS เวทมนตร์ผสานกล่อง (ลบขอบมนและระยะห่างระหว่างกล่องที่อยู่ติดกัน) */
+                .custom-q-box { 
+                    margin-top: 0px !important; 
+                    margin-bottom: 0px !important; 
+                    border-radius: 0px !important; 
+                    padding-top: 4px !important; 
+                    padding-bottom: 4px !important; 
+                }
+                /* กล่องแรกสุด (ให้มีขอบมนด้านบน) */
+                .ql-editor > :not(.custom-q-box) + .custom-q-box,
+                .ql-editor > .custom-q-box:first-child {
+                    margin-top: 16px !important;
+                    border-top-left-radius: 12px !important;
+                    border-top-right-radius: 12px !important;
+                    padding-top: 16px !important;
+                }
+                /* กล่องสุดท้าย (ให้มีขอบมนด้านล่าง) */
+                .custom-q-box:not(:has(+ .custom-q-box)),
+                .custom-q-box:last-child {
+                    margin-bottom: 16px !important;
+                    border-bottom-left-radius: 12px !important;
+                    border-bottom-right-radius: 12px !important;
+                    padding-bottom: 16px !important;
+                }
+            `;
+            const styleSheet = document.createElement("style");
+            styleSheet.innerText = customCss;
+            document.head.appendChild(styleSheet);
+
+            // 3. เริ่มต้น Editor
             if (document.getElementById('knowledgeDescEditor')) {
                 quillEditor = new Quill('#knowledgeDescEditor', {
                     theme: 'snow',
                     placeholder: 'พิมพ์เนื้อหาบทความที่นี่...',
                     modules: {
-                        toolbar: [
-                            ['bold', 'italic', 'underline'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'header': [1, 2, 3, false] }],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['image', 'link'],
-                            ['clean']
-                        ]
+                        toolbar: {
+                            container: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['image', 'link'],
+                                // ใส่ปุ่มกล่อง 4 สี
+                                [{ 'customBox': 'red' }, { 'customBox': 'yellow' }, { 'customBox': 'green' }, { 'customBox': 'blue' }],
+                                ['clean']
+                            ],
+                            handlers: {
+                                'customBox': function(value) {
+                                    const format = this.quill.getFormat();
+                                    if (format.customBox === value) {
+                                        this.quill.format('customBox', false); 
+                                    } else {
+                                        this.quill.format('customBox', value); 
+                                    }
+                                },
+                                // ระบบแอบเอาภาพโยนขึ้น ImgBB เพื่อแก้ปัญหาเครื่องค้าง/หน่วยความจำเต็ม
+                                'image': function() {
+                                    const input = document.createElement('input');
+                                    input.setAttribute('type', 'file');
+                                    input.setAttribute('accept', 'image/*');
+                                    input.click();
+
+                                    input.onchange = () => {
+                                        const file = input.files[0];
+                                        if (file) {
+                                            showNotification('กำลังอัปโหลดรูปภาพลงบทความ...', 'warning');
+                                            compressImage(file, 800, 800, 0.8, async (dataUrl) => {
+                                                try {
+                                                    const imgUrl = await uploadToImgBB(dataUrl);
+                                                    let range = quillEditor.getSelection(true);
+                                                    quillEditor.insertEmbed(range ? range.index : 0, 'image', imgUrl);
+                                                    showNotification('แทรกรูปภาพสำเร็จ!', 'success');
+                                                } catch (error) {
+                                                    showNotification('อัปโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่', 'error');
+                                                }
+                                            });
+                                        }
+                                    };
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -5769,9 +5870,15 @@
             // กรองด้วยหมวดหมู่ (Category) และ คำค้นหา (Search)
             filteredKnowledgeData = knowledgeDataStore.filter(k => {
                 const categoryMatch = currentKnowledgeCategory === 'all' || k.category === currentKnowledgeCategory;
+                
+                // ใช้เทคนิคสกัด Text ออกจาก HTML เพื่อใช้เสิร์ชได้แม่นขึ้น (ถ้า k.desc เป็น HTML)
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = k.desc;
+                const plainTextDesc = tempDiv.textContent || tempDiv.innerText || "";
+
                 const searchMatch = !searchTerm || 
                     (k.title && k.title.toLowerCase().includes(searchTerm)) || 
-                    (k.desc && k.desc.toLowerCase().includes(searchTerm));
+                    (plainTextDesc.toLowerCase().includes(searchTerm));
                 
                 return categoryMatch && searchMatch;
             });
@@ -5783,6 +5890,9 @@
                 grid.innerHTML = '<div class="col-span-full text-center py-12 text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">ไม่พบบทความที่คุณค้นหา</div>';
                 return;
             }
+
+            // 💡 สร้างตัวแปรเก็บ HTML ก่อน ไม่ innerHTML += ในลูป
+            let htmlContent = '';
 
              filteredKnowledgeData.forEach(k => {
                 let badgeHtml = '<span class="absolute top-4 left-4 bg-slate-600 text-white text-xs px-2 py-1 rounded-md shadow-sm z-10 font-medium">ทั่วไป</span>';
@@ -5799,25 +5909,35 @@
 
                 const favIcon = k.isFavorite ? '<i class="ph ph-star-fill text-amber-500 text-lg"></i>' : '<i class="ph ph-star text-slate-400 text-lg hover:text-amber-500"></i>';
 
-                grid.innerHTML += `
-                    <div class="bg-white rounded-2xl p-4 card-shadow card-hover relative group flex flex-col h-full">
+                // 💡 สกัด Plain Text ออกมาแสดงเป็นตัวอย่าง เพื่อป้องกัน HTML พัง
+                const tempDiv = document.createElement("div");
+                tempDiv.innerHTML = k.desc || "";
+                const previewText = tempDiv.textContent || tempDiv.innerText || "";
+
+                htmlContent += `
+                    <div class="bg-white rounded-2xl p-4 card-shadow card-hover relative group flex flex-col h-full overflow-hidden">
                         ${badgeHtml}
                         <div class="absolute top-4 right-4 flex gap-1 z-10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button onclick="toggleFavoriteKnowledge(event, '${k.id}')" class="bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-md transition-colors mr-1">${favIcon}</button>
                             <button onclick="editKnowledge(event, '${k.id}')" class="bg-white/90 backdrop-blur-sm text-blue-600 p-2 rounded-lg shadow-md hover:bg-blue-50 transition-colors"><i class="ph ph-pencil-simple text-base"></i></button>
                             <button onclick="deleteKnowledge(event, '${k.id}')" class="bg-white/90 backdrop-blur-sm text-rose-600 p-2 rounded-lg shadow-md hover:bg-rose-50 transition-colors"><i class="ph ph-trash text-base"></i></button>
                         </div>
-                        <div class="aspect-video bg-slate-100 rounded-xl mb-4 overflow-hidden relative cursor-pointer shadow-sm border border-slate-100" onclick="openKnowledgeReadModal('${k.id}')">
+                        <div class="aspect-video bg-slate-100 rounded-xl mb-4 overflow-hidden relative cursor-pointer shadow-sm border border-slate-100 shrink-0" onclick="openKnowledgeReadModal('${k.id}')">
                             <img src="${k.cover || 'https://placehold.co/600x400/e2e8f0/64748b?text=No+Image'}" alt="${k.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                             <div class="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors"></div>
                         </div>
-                        <h3 class="font-bold text-lg text-slate-800 mb-2 line-clamp-2 cursor-pointer hover:text-emerald-600 transition-colors flex items-start gap-2" onclick="openKnowledgeReadModal('${k.id}')">
-                            ${k.isFavorite ? '<i class="ph ph-star-fill text-amber-500 mt-1 shrink-0"></i>' : ''} ${k.title}
-                        </h3>
-                        <p class="text-sm text-slate-500 line-clamp-2 mt-auto cursor-pointer" onclick="openKnowledgeReadModal('${k.id}')">${k.desc}</p>
+                        <div class="flex-1 flex flex-col min-h-0">
+                            <h3 class="font-bold text-lg text-slate-800 mb-2 line-clamp-2 cursor-pointer hover:text-emerald-600 transition-colors flex items-start gap-2" onclick="openKnowledgeReadModal('${k.id}')">
+                                ${k.isFavorite ? '<i class="ph ph-star-fill text-amber-500 mt-1 shrink-0"></i>' : ''} ${k.title}
+                            </h3>
+                            <p class="text-sm text-slate-500 line-clamp-2 mt-auto cursor-pointer overflow-hidden text-ellipsis" onclick="openKnowledgeReadModal('${k.id}')">${previewText}</p>
+                        </div>
                     </div>
                 `;
             });
+            
+            // นำ HTML ที่ต่อเสร็จแล้วยัดใส่หน้าจอทีเดียว
+            grid.innerHTML = htmlContent;
         }
 
         function showAddKnowledgeModal() {
@@ -6072,7 +6192,8 @@
 
         function closeReadKnowledgeModal() {
             document.getElementById('readKnowledgeModal').classList.add('hidden');
-            document.getElementById('readKnowledgeModal').classList.remove('flex');
+            document.getElementById('readKnowledgeModal').classList.remove('flex'); // 👈 แก้ตรงนี้ครับ
+        
         }
 
         function toggleAccordion(id, btnElement) {
