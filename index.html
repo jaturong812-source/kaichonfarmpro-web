@@ -12,7 +12,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ฟาร์มโปร">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,7 +21,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-    <!-- เพิ่ม Quill.js สำหรับ Text Editor -->
+    <!-- นำไปวางต่อจาก Tailwind CSS ในแท็ก <head> -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
@@ -825,7 +824,7 @@
                         </button>
                     </div>
 
-                    <!-- Search Box -->
+                    <!-- Search Box (แทรกตรงนี้) -->
                     <div class="mb-6">
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -928,6 +927,70 @@
                         </div>
                     </div>
                     <!-- สิ้นสุด: กล่องเคล็ดลับลดต้นทุน -->
+
+                    <!-- เริ่ม: กล่องเคล็ดลับ 4 เดือนขึ้นไป (แทรกตรงนี้) -->
+                    <div class="bg-white rounded-2xl border border-indigo-100 overflow-hidden card-shadow mb-6">
+                        <button onclick="toggleAccordion('acc-feed-tips-2', this)" class="w-full flex justify-between items-center p-4 sm:p-5 bg-[#eef2ff] hover:bg-[#e0e7ff] transition-colors text-left border-b border-indigo-100/50">
+                            <h4 class="font-bold text-indigo-800 text-base sm:text-lg flex items-center gap-2">
+                                <i class="ph ph-book-open-text text-xl"></i> 📖 เปิดอ่านเคล็ดลับ: การจัดโภชนาการไก่รุ่น-ไก่หนุ่ม (4 เดือนขึ้นไป) เพื่อโครงสร้างและกล้ามเนื้อ
+                            </h4>
+                            <i class="ph ph-caret-down text-indigo-600 transition-transform duration-300 text-xl"></i>
+                        </button>
+                        <div id="acc-feed-tips-2" class="hidden px-5 pb-6 pt-5 text-slate-700 text-sm sm:text-base leading-relaxed bg-white">
+                            <p class="mb-5 text-slate-600">การวางแผนโภชนาการแบบ "แบ่งตามเดือน" ตั้งแต่อายุ 4 เดือนขึ้นไป ถือเป็นความละเอียดอ่อนระดับมืออาชีพ กราฟการเจริญเติบโตจะเปลี่ยนจาก "ยืดโครงสร้าง" ไปสู่ "การสร้างกล้ามเนื้อ"</p>
+
+                            <!-- อายุ 4-5 เดือน (สีฟ้า) -->
+                            <div class="bg-[#eff6ff] border-l-[3px] border-blue-500 p-4 sm:p-5 rounded-r-xl mb-4">
+                                <h5 class="font-bold text-blue-800 text-base mb-2 flex items-center gap-2">
+                                    <i class="ph ph-info text-blue-500 text-lg"></i> 🐓 อายุ 4 - 5 เดือน: วัยเก็บรายละเอียดโครงสร้างและเริ่มสร้างกล้าม
+                                </h5>
+                                <p class="text-slate-700 mb-3 font-medium">โครงกระดูกใกล้สุดแล้ว ร่างกายเริ่มสร้างกล้ามเนื้อ ต้องระวังไม่ให้ไก่อ้วนฉุ</p>
+                                <ul class="list-disc pl-5 space-y-2 text-slate-700 font-medium text-[15px]">
+                                    <li><span class="text-blue-700 font-bold">เป้าหมายโภชนาการ:</span> โปรตีน 15-16% ลดคาร์โบไฮเดรตที่ย่อยง่ายลง</li>
+                                    <li><span class="text-blue-700 font-bold">แนะนำสูตร:</span> CP สูตร 2 (3-4 ส่วน), ปลายข้าว/ข้าวโพดบด (2 ส่วน), รำละเอียด (1 ส่วน), แหนแดงแห้ง (1.5 ส่วน), เปลือกหอยป่น (0.5 ส่วน), หญ้าสับ/ใบเตย (0.5 ส่วน)</li>
+                                    <li class="text-rose-600">⚠️ <strong>ทริค:</strong> ช่วงนี้ยัง "งดข้าวเปลือก" ไปก่อน ให้กระเพาะทำงานกับของย่อยง่าย</li>
+                                </ul>
+                            </div>
+
+                            <!-- อายุ 5-6 เดือน (สีเหลือง) -->
+                            <div class="bg-[#fffbeb] border-l-[3px] border-amber-500 p-4 sm:p-5 rounded-r-xl mb-4">
+                                <h5 class="font-bold text-amber-900 text-base mb-2 flex items-center gap-2">
+                                    <i class="ph ph-info text-amber-600 text-lg"></i> 🐓 อายุ 5 - 6 เดือน: วัย "ฝึกกระเพาะ" และรัดกล้ามเนื้อ
+                                </h5>
+                                <p class="text-slate-700 mb-3 font-medium">เป็นช่วงหัวเลี้ยวหัวต่อ กระเพาะบด (กึ๋น) แข็งแรงพอแล้ว เริ่มเปลี่ยนจากอาหารอ่อนเป็นอาหารแข็ง เพื่อให้เนื้อไก่ "รัดตัว" ไม่เหลวเผลละ</p>
+                                <ul class="list-disc pl-5 space-y-2 text-slate-700 font-medium text-[15px]">
+                                    <li><span class="text-amber-800 font-bold">เป้าหมายโภชนาการ:</span> โปรตีน 14-15% เริ่มเพิ่มกากใยชนิดแข็ง</li>
+                                    <li><span class="text-amber-800 font-bold">แนะนำสูตร:</span> ข้าวเปลือก ล้างตากแดด (1 ส่วน - เพื่อฝึกบดเปลือกข้าว), CP สูตร 2 (3 ส่วน), ปลายข้าว (2 ส่วน - ลดข้าวโพดคุมไขมัน), แหนแดงแห้ง (1 ส่วน), รำละเอียด (0.5 ส่วน), เปลือกหอยป่น (0.5 ส่วน)</li>
+                                </ul>
+                            </div>
+
+                            <!-- อายุ 6-7 เดือน (สีเขียว) -->
+                            <div class="bg-[#ecfdf5] border-l-[3px] border-emerald-500 p-4 sm:p-5 rounded-r-xl mb-4">
+                                <h5 class="font-bold text-emerald-900 text-base mb-2 flex items-center gap-2">
+                                    <i class="ph ph-check-circle text-emerald-600 text-lg"></i> 🐓 อายุ 6 - 7 เดือน: วัยไก่หนุ่ม / เริ่มครอบสุ่ม / เตรียมฟิตซ้อม
+                                </h5>
+                                <p class="text-slate-700 mb-3 font-medium">ไก่เริ่มหวงถิ่น คึกคะนอง กล้ามเนื้อต้องแข็งแกร่งพร้อมรับแรงกระแทก</p>
+                                <ul class="list-disc pl-5 space-y-2 text-slate-700 font-medium text-[15px]">
+                                    <li><span class="text-emerald-800 font-bold">เป้าหมายโภชนาการ:</span> โปรตีน 14-15% เน้นความแข็งของกล้ามเนื้อ งดวัตถุดิบที่มีน้ำเยอะ</li>
+                                    <li><span class="text-emerald-800 font-bold">แนะนำสูตร:</span> ข้าวเปลือก ล้างตากแดด (3-4 ส่วน - ดันเป็นพระเอกหลัก), CP สูตร 3 ฟิตซ้อม (2 ส่วน - เน้นแร่ธาตุซ่อมแซมกล้ามเนื้อ), ข้าวโพดบด (1 ส่วน), ปลาป่น (0.5 ส่วน), หญ้าสับ (ให้จิกกินแยกเพื่อลดเครียด)</li>
+                                </ul>
+                            </div>
+
+                            <!-- อายุ 7 เดือนขึ้นไป (สีแดงอ่อน) -->
+                            <div class="bg-[#fff1f2] border-l-[3px] border-rose-500 p-4 sm:p-5 rounded-r-xl mb-6">
+                                <h5 class="font-bold text-rose-800 text-base mb-2 flex items-center gap-2">
+                                    <i class="ph ph-fire text-rose-500 text-lg"></i> 🐓 อายุ 7 เดือนขึ้นไป: วัยเลี้ยงฟิตซ้อมออกชนเต็มรูปแบบ
+                                </h5>
+                                <p class="text-slate-700 mb-3 font-medium">ร่างกายโตเต็มวัย 100% โภชนาการจะเปลี่ยนเป็นการ "บำรุงเฉพาะกิจ"</p>
+                                <ul class="list-disc pl-5 space-y-2 text-slate-700 font-medium text-[15px]">
+                                    <li><span class="text-rose-700 font-bold">อาหารหลัก:</span> ข้าวเปลือก (ล้าง ขัดผิว แช่น้ำให้นิ่ม) 100% ในมื้อปกติ เพื่อขัดกระเพาะและให้เนื้อแน่น</li>
+                                    <li><span class="text-rose-700 font-bold">อาหารเสริมกำลัง (มื้อเช้า/หลังซ้อม):</span> ให้กินแยก ไม่ผสมกองหลัก เช่น ไข่ขาวต้มสุก, เนื้อปลาช่อนต้ม, กล้วยน้ำว้าสุก (กันตะคริว) และ CP สูตร 3 ให้จิกกินเสริมวันละ 1-2 ช้อนโต๊ะ</li>
+                                    <li class="text-rose-600 mt-2">⚠️ <strong>ข้อควรระวัง:</strong> งด แหนแดง รำละเอียด และอาหารที่กากใยสูงเด็ดขาด เพราะจะทำให้ไก่หอบเร็วเวลาชน!</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- สิ้นสุด: กล่องเคล็ดลับ 4 เดือนขึ้นไป -->
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- ฝั่งกรอกข้อมูล (Input) -->
@@ -1293,7 +1356,7 @@
                     </div>
                 </div>
 
-                <!-- FINANCE SECTION (เพิ่มกลับมา) -->
+                <!-- FINANCE SECTION -->
                 <div id="finance" class="section hidden">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <div>
@@ -1381,7 +1444,7 @@
                     </div>
                 </div>
 
-                <!-- REPORTS SECTION (เพิ่มกลับมา) -->
+                <!-- REPORTS SECTION -->
                 <div id="reports" class="section hidden">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                         <div>
@@ -3125,106 +3188,106 @@
         }
 
         function loadDataFromCloud() {
-            if (!currentUser) return;
-            
-            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
-                if (doc.exists) {
-                    const docData = doc.data();
-                    let data = {};
-                    
-                    if (docData.payload) {
-                        try {
-                            data = JSON.parse(docData.payload);
-                        } catch(e) {
-                            console.error("Parse Error:", e);
-                        }
-                    } else {
-                        data = docData; 
-                    }
-                    
-                    batchesDataStore = data.batches || {}; 
-                    breedersDataStore = data.breeders || []; 
-                    financeDataStore = data.finance || [];
-                    feedFormulasStore = data.feedFormulas || [];
-                    knowledgeDataStore = data.knowledge || [];
-                    
-                    isCloudDataLoaded = true; 
-                    
-                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore, feedFormulas: feedFormulasStore, knowledge: knowledgeDataStore }));
-                    
-                    // ป้องกัน Error ตอนดึงข้อมูลแล้วทำให้หน้าจอค้าง
-                    try {
-                        renderAll();
-                    } catch (renderError) {
-                        console.error("Render Data Error:", renderError);
-                    } finally {
-                        // ไม่ว่าจะดึงข้อมูลผ่าน หรือ Error หน้าต่างโหลด "ต้องปิดเสมอ"
-                        document.getElementById('syncOverlay').classList.add('hidden');
-                        document.getElementById('syncOverlay').classList.remove('flex');
-                    }
-                } else {
-                    migrateLocalData();
-                }
-            }, err => {
-                console.error("Load Error:", err);
-                document.getElementById('syncOverlay').classList.add('hidden');
-                document.getElementById('syncOverlay').classList.remove('flex');
-                showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
-            });
-        }
+            if (!currentUser) return;
+            
+            db.collection('users').doc(currentUser.uid).onSnapshot(doc => {
+                if (doc.exists) {
+                    const docData = doc.data();
+                    let data = {};
+                    
+                    if (docData.payload) {
+                        try {
+                            data = JSON.parse(docData.payload);
+                        } catch(e) {
+                            console.error("Parse Error:", e);
+                        }
+                    } else {
+                        data = docData; 
+                    }
+                    
+                    batchesDataStore = data.batches || {}; 
+                    breedersDataStore = data.breeders || []; 
+                    financeDataStore = data.finance || [];
+                    feedFormulasStore = data.feedFormulas || [];
+                    knowledgeDataStore = data.knowledge || [];
+                    
+                    isCloudDataLoaded = true; 
+                    
+                    localStorage.setItem('farmData', JSON.stringify({ batches: batchesDataStore, breeders: breedersDataStore, finance: financeDataStore, feedFormulas: feedFormulasStore, knowledge: knowledgeDataStore }));
+                    
+                    // ป้องกัน Error ตอนดึงข้อมูลแล้วทำให้หน้าจอค้าง
+                    try {
+                        renderAll();
+                    } catch (renderError) {
+                        console.error("Render Data Error:", renderError);
+                    } finally {
+                        // ไม่ว่าจะดึงข้อมูลผ่าน หรือ Error หน้าต่างโหลด "ต้องปิดเสมอ"
+                        document.getElementById('syncOverlay').classList.add('hidden');
+                        document.getElementById('syncOverlay').classList.remove('flex');
+                    }
+                } else {
+                    migrateLocalData();
+                }
+            }, err => {
+                console.error("Load Error:", err);
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
+                showNotification('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Cloud', 'error');
+            });
+        }
 
-        function migrateLocalData() {
-            const str = localStorage.getItem('farmData');
-            isCloudDataLoaded = true; 
-            
-            if (str) {
-                try {
-                    const data = JSON.parse(str);
-                    if(data && (data.batches || data.breeders || data.finance || data.feedFormulas || data.knowledge)) {
-                        batchesDataStore = data.batches || {}; 
-                        breedersDataStore = data.breeders || []; 
-                        financeDataStore = data.finance || [];
-                        feedFormulasStore = data.feedFormulas || [];
-                        knowledgeDataStore = data.knowledge || [];
-                        saveData(); 
-                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
-                    }
-                } catch (e) { 
-                    console.error(e);
-                }
-            } else {
-                saveData(); 
-            }
-            
-            try {
-                renderAll();
-            } catch (renderError) {
-                console.error("Render Local Data Error:", renderError);
-            } finally {
-                // ปิดหน้าต่างโหลดเสมอ
-                document.getElementById('syncOverlay').classList.add('hidden');
-                document.getElementById('syncOverlay').classList.remove('flex');
-            }
-        }
+        function migrateLocalData() {
+            const str = localStorage.getItem('farmData');
+            isCloudDataLoaded = true; 
+            
+            if (str) {
+                try {
+                    const data = JSON.parse(str);
+                    if(data && (data.batches || data.breeders || data.finance || data.feedFormulas || data.knowledge)) {
+                        batchesDataStore = data.batches || {}; 
+                        breedersDataStore = data.breeders || []; 
+                        financeDataStore = data.finance || [];
+                        feedFormulasStore = data.feedFormulas || [];
+                        knowledgeDataStore = data.knowledge || [];
+                        saveData(); 
+                        showNotification("เชื่อมต่อบัญชีใหม่สำเร็จ โอนย้ายข้อมูลเดิมให้แล้ว!", "success");
+                    }
+                } catch (e) { 
+                    console.error(e);
+                }
+            } else {
+                saveData(); 
+            }
+            
+            try {
+                renderAll();
+            } catch (renderError) {
+                console.error("Render Local Data Error:", renderError);
+            } finally {
+                // ปิดหน้าต่างโหลดเสมอ
+                document.getElementById('syncOverlay').classList.add('hidden');
+                document.getElementById('syncOverlay').classList.remove('flex');
+            }
+        }
 
-        function renderBatches() {
-            const grid = document.getElementById('chickBatchesGrid'); 
-            if (!grid) return;
-            grid.innerHTML = ''; // เคลียร์ของเก่าครั้งเดียว
-            
-            const searchTerm = document.getElementById('batchSearchInput')?.value.toLowerCase() || '';
+        function renderBatches() {
+            const grid = document.getElementById('chickBatchesGrid'); 
+            if (!grid) return;
+            grid.innerHTML = ''; // เคลียร์ของเก่าครั้งเดียว
+            
+            const searchTerm = document.getElementById('batchSearchInput')?.value.toLowerCase() || '';
 
-            const batchesArray = Object.values(batchesDataStore).filter(b => {
-                if (!searchTerm) return true;
-                const nameMatch = b.name && b.name.toLowerCase().includes(searchTerm);
-                const parentsMatch = b.parents && b.parents.toLowerCase().includes(searchTerm);
-                const fBreedMatch = b.fatherBreed && b.fatherBreed.toLowerCase().includes(searchTerm);
-                const mBreedMatch = b.motherBreed && b.motherBreed.toLowerCase().includes(searchTerm);
-                return nameMatch || parentsMatch || fBreedMatch || mBreedMatch;
-            });
+            const batchesArray = Object.values(batchesDataStore).filter(b => {
+                if (!searchTerm) return true;
+                const nameMatch = b.name && b.name.toLowerCase().includes(searchTerm);
+                const parentsMatch = b.parents && b.parents.toLowerCase().includes(searchTerm);
+                const fBreedMatch = b.fatherBreed && b.fatherBreed.toLowerCase().includes(searchTerm);
+                const mBreedMatch = b.motherBreed && b.motherBreed.toLowerCase().includes(searchTerm);
+                return nameMatch || parentsMatch || fBreedMatch || mBreedMatch;
+            });
 
-            batchesArray.sort((a, b) => {
-                const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
+            batchesArray.sort((a, b) => {
+                const aAlive = a.chicks ? a.chicks.filter(c => c.status === 'alive').length : 0;
                 const bAlive = b.chicks ? b.chicks.filter(c => c.status === 'alive').length : 0;
                 const aActive = aAlive > 0;
                 const bActive = bAlive > 0;
